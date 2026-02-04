@@ -1,0 +1,13 @@
+enum Role {
+    TOURIST
+    GUIDE
+    ADMIN
+}
+
+enum BookingStatus {
+    PENDING
+    CONFIRMED
+    CANCELLED
+    COMPLETED
+}
+

@@ -1,0 +1,48 @@
+model User {
+    id         String   @id @default(uuid())
+    name       String
+    email      String   @unique
+    password   String
+    role       Role     @default(TOURIST)
+    profilePic String?
+    bio        String?
+    languages  String[]
+    createdAt  DateTime @default(now())
+    updatedAt  DateTime @updatedAt
+
+    guide   Guide?
+    tourist Tourist?
+
+    @@map("users")
+}
+
+model Guide {
+    id     String @id @default(uuid())
+    userId String @unique
+
+    expertise String[]
+    dailyRate Float
+
+    user User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+    tour Tour[]
+
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+    bookings  Booking[]
+    reviews   Review[]
+
+    @@map("guides")
+}
+
+model Tourist {
+    id          String    @id @default(uuid())
+    userId      String    @unique
+    preferences String[]
+    user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+    booking     Booking[]
+    createdAt   DateTime  @default(now())
+    updatedAt   DateTime  @updatedAt
+    reviews     Review[]
+
+    @@map("tourists")
+}
