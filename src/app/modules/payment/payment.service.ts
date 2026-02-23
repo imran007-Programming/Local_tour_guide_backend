@@ -28,8 +28,8 @@ const createStripeIntent = async (
         throw new ApiError(404, "Booking not found");
     }
 
-    if (booking.status !== BookingStatus.CONFIRMED) {
-        throw new ApiError(400, "wait until booking is confirmed by accociated guide");
+    if (booking.status !== BookingStatus.PENDING) {
+        throw new ApiError(400, "Booking must be in pending status to make payment");
     }
 
     let payment = await prisma.payment.findUnique({
@@ -80,6 +80,23 @@ const createStripeIntent = async (
     };
 };
 
+const handleWebhook = async (event: any) => {
+    if (event.type === "payment_intent.succeeded") {
+        const paymentIntent = event.data.object;
+        const { bookingId, paymentId } = paymentIntent.metadata;
+
+        await prisma.payment.update({
+            where: { id: paymentId },
+            data: { status: PaymentStatus.PAID }
+        });
+
+        await prisma.booking.update({
+            where: { id: bookingId },
+            data: { status: BookingStatus.CONFIRMED }
+        });
+    }
+};
+
 
 
 
@@ -87,5 +104,5 @@ const createStripeIntent = async (
 
 export const paymentService = {
     createStripeIntent,
-
+    handleWebhook
 }

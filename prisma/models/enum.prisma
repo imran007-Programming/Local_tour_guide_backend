@@ -5,9 +5,10 @@ enum Role {
 }
 
 enum BookingStatus {
-    PENDING
-    CONFIRMED
-    CANCELLED
-    COMPLETED
+    PENDING // user requested
+    CONFIRMED // payment completed
+    CANCELLED // cancelled by tourist
+    REJECTED // rejected by guide
+    COMPLETED // tour finished
+    EXPIRED // payment timeout
 }
-

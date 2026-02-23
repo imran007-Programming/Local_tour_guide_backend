@@ -1,20 +1,32 @@
 model Booking {
-    id           String        @id @default(uuid())
-    touristId    String
-    tourist      Tourist       @relation(fields: [touristId], references: [id])
-    guideId      String
-    guide        Guide         @relation(fields: [guideId], references: [id])
-    tourId       String
-    tour         Tour          @relation(fields: [tourId], references: [id])
-    requestDate  DateTime
-    requestTime  String
-    status       BookingStatus @default(PENDING)
+    id String @id @default(uuid())
+
+    touristId String
+    tourist   Tourist @relation(fields: [touristId], references: [id])
+
+    guideId String
+    guide   Guide  @relation(fields: [guideId], references: [id])
+
+    tourId String
+    tour   Tour   @relation(fields: [tourId], references: [id])
+
+    bookingDateTime DateTime
+    status          BookingStatus @default(PENDING)
+
     message      String?
     cancelReason String?
-    createdAt    DateTime      @default(now())
-    updatedAt    DateTime      @updatedAt
-    reviews      Review[]
-    payment       Payment[]
 
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    reviews Review[]
+    payment Payment[]
+
+    // Prevent same slot double booking
+    @@unique([tourId, bookingDateTime])
+    //  Prevent same tourist booking same slot
+    @@unique([touristId, tourId, bookingDateTime])
+    @@index([touristId])
+    @@index([tourId])
     @@map("bookings")
 }

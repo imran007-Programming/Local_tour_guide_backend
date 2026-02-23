@@ -10,5 +10,9 @@ const router = express.Router()
 
 router.get("/", authHelper(Role.ADMIN), userController.getAllfromDB)
 router.get("/:id", authHelper(Role.ADMIN), userController.getSingleUserfromDB)
-router.patch("/", fileUploader.upload.single("file"), authHelper(Role.ADMIN, Role.GUIDE, Role.TOURIST), validateRequest(updateUserZodSchema), userController.updateUser)
+router.patch("/update-profile",
+    authHelper(Role.ADMIN, Role.GUIDE, Role.TOURIST),
+    fileUploader.upload.single("profilePic"),
+    validateRequest(updateUserZodSchema),
+    userController.updateUser)
 export const userRoutes = router

@@ -6,6 +6,7 @@ import { tourRoutes } from '../modules/tour/tour.routes';
 import { bookingRoutes } from '../modules/Bookings/booking.routes';
 import { reviewRoutes } from '../modules/review/review.routes';
 import { paymentRoutes } from '../modules/payment/payment.routes';
+import { touristRoutes } from '../modules/tourist/tourist.routes';
 const router = express.Router()
 
 const moduleRoutes = [
@@ -20,6 +21,10 @@ const moduleRoutes = [
     {
         path: "/guides",
         route: guideRoutes
+    },
+    {
+        path: "/tourists",
+        route: touristRoutes
     },
     {
         path: "/tour",

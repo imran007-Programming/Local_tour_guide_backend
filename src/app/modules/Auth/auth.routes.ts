@@ -9,7 +9,8 @@ const router = express.Router();
 router.get("/me", authHelper(Role.ADMIN, Role.GUIDE, Role.TOURIST), authController.getMe)
 router.post("/register", fileUploader.upload.single("file"), validateRequest(createUSerZodSchema), authController.createUser)
 router.post("/login", authController.login)
-
+router.post("/refreshToken", authController.getRefreshToken)
+router.post("/logout", authController.logout)
 
 
 export const AuthRoutes = router;

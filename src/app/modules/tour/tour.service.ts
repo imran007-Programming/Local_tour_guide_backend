@@ -13,6 +13,9 @@ const createTour = async (req: Request & { user?: any }) => {
     const payload = req.body
     const imageUrlList: string[] = []
 
+    if (typeof payload.languages === 'string') {
+        payload.languages = JSON.parse(payload.languages)
+    }
 
     if (req.files && Array.isArray(req.files)) {
 
@@ -25,16 +28,20 @@ const createTour = async (req: Request & { user?: any }) => {
     const guide = await prisma.guide.findUnique({
         where: { userId }
     })
-    console.log(guide)
+
     if (!guide) {
         throw new ApiError(httpStatus.NOT_FOUND, "Guide profile not found")
     }
     if (!guide.id) {
         throw new ApiError(httpStatus.BAD_REQUEST, "Only guides can create tours")
     }
+
+    const slug = payload.title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
+
     return prisma.tour.create({
         data: {
             title: payload.title,
+            slug,
             description: payload.description,
             price: payload.price,
             duration: payload.duration,
@@ -57,7 +64,7 @@ const createTour = async (req: Request & { user?: any }) => {
 }
 const getAllTour = async (options: any, filters: any) => {
     const { page, limit, skip, sortBy, sortOrder } = paginationHelper.calculatePagination(options)
-    const { searchTerm, maxPrice, minPrice, ...filterData } = filters;
+    const { searchTerm, maxPrice, minPrice, guest, duration, ...filterData } = filters;
 
     const andConditions: Prisma.TourWhereInput[] = [];
     if (searchTerm) {
@@ -68,6 +75,20 @@ const getAllTour = async (options: any, filters: any) => {
                     mode: "insensitive"
                 }
             }))
+        })
+    }
+    if (guest) {
+        andConditions.push({
+            maxGroupSize: {
+                gte: Number(guest)
+            }
+        })
+    }
+    if (duration) {
+        andConditions.push({
+            duration: {
+                gte: Number(duration)
+            }
         })
     }
     if (Object.keys(filterData).length > 0) {
@@ -116,6 +137,11 @@ const getAllTour = async (options: any, filters: any) => {
     }
 
 }
+const getSingleTour = async (slug: string) => {
+    return await prisma.tour.findUnique({
+        where: { slug }
+    })
+}
 const updateTour = async (tourId: string, payload: Partial<TCreateTourPayload>) => {
 
     return await prisma.tour.update({
@@ -136,9 +162,72 @@ const deleteTour = async (tourId: string) => {
     })
 }
 
+const addTourImages = async (
+    tourId: string,
+    req: Request
+) => {
+    const uploadedImages: string[] = [];
+
+    if (req.files && Array.isArray(req.files)) {
+        for (const file of req.files) {
+            const result =
+                await fileUploader.uploadToCloudinary(file);
+            uploadedImages.push(result.secure_url);
+        }
+    }
+
+    const existingTour = await prisma.tour.findUnique({
+        where: { id: tourId },
+    });
+
+    if (!existingTour) {
+        throw new Error("Tour not found");
+    }
+
+    return prisma.tour.update({
+        where: { id: tourId },
+        data: {
+            images: [
+                ...existingTour.images,
+                ...uploadedImages,
+            ],
+        },
+    });
+};
+
+const deleteTourImage = async (
+    tourId: string,
+    imageUrl: string
+) => {
+    const existingTour = await prisma.tour.findUnique({
+        where: { id: tourId },
+    });
+
+    if (!existingTour) {
+        throw new Error("Tour not found");
+    }
+
+    // Delete from Cloudinary
+    await fileUploader.deleteFromCloudinary(imageUrl);
+
+    const updatedImages = existingTour.images.filter(
+        (img) => img !== imageUrl
+    );
+
+    return prisma.tour.update({
+        where: { id: tourId },
+        data: {
+            images: updatedImages,
+        },
+    });
+};
+
 export const tourService = {
     createTour,
     getAllTour,
+    getSingleTour,
     updateTour,
-    deleteTour
+    deleteTour,
+    addTourImages,
+    deleteTourImage
 }

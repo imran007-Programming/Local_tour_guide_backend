@@ -20,8 +20,8 @@ model Guide {
     id     String @id @default(uuid())
     userId String @unique
 
-    expertise String[]
-    dailyRate Float
+    expertise String[] @default([])
+    dailyRate Float?
 
     user User   @relation(fields: [userId], references: [id], onDelete: Cascade)
     tour Tour[]
@@ -37,7 +37,7 @@ model Guide {
 model Tourist {
     id          String    @id @default(uuid())
     userId      String    @unique
-    preferences String[]
+    preferences String[]  @default([])
     user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
     booking     Booking[]
     createdAt   DateTime  @default(now())

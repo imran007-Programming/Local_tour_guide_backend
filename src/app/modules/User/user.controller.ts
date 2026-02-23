@@ -1,14 +1,17 @@
-import httpStatus from 'http-status';
-
 import { catchAsync } from "../../shared/catchAsync"
 import sendResponse from "../../shared/sendResponse"
 import { userService } from './user.service';
 import { authService } from '../Auth/auth.service';
 import { Request, Response } from 'express';
+import { updateUserZodSchema } from './user.validation';
+import pick from "../../helper/Pick";
+import { userFilterableFields } from "./user.constant";
 
 
 const getAllfromDB = catchAsync(async (req: Request, res: Response) => {
-    const result = await userService.getAllfromDB(req)
+    const options = pick(req.query, ["page", "limit", "sortBy", "sortOrder"])
+    const filters = pick(req.query, userFilterableFields)
+    const result = await userService.getAllfromDB(options, filters)
     sendResponse(res, {
         statusCode: 201,
         success: true,
@@ -30,7 +33,6 @@ const getSingleUserfromDB = catchAsync(async (req: Request, res: Response) => {
 })
 
 const updateUser = catchAsync(async (req: Request, res: Response) => {
-
     const result = await userService.updateUser(req)
     sendResponse(res, {
         statusCode: 201,

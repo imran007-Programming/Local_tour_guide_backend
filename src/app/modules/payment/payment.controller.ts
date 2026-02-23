@@ -59,6 +59,11 @@ export const handleStripeWebhook = async (req: Request, res: Response) => {
                 paymentIntentId: session.payment_intent,
             },
         });
+
+        await prisma.booking.update({
+            where: { id: bookingId },
+            data: { status: "CONFIRMED" as any }
+        });
     }
 
 

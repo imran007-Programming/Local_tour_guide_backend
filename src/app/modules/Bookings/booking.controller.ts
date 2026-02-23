@@ -21,15 +21,16 @@ const createBooking = catchAsync(async (req: Request & { user?: any }, res: Resp
 })
 
 const getMyBookings = catchAsync(async (req: Request & { user?: any }, res: Response) => {
-
+    const options = pick(req.query, ["page", "limit", "sortBy", "sortOrder"])
+    const filters = pick(req.query, bookingFilterableFields)
     const user = req.user
-    const result = await bookingService.getMyBooking(user)
+    const result = await bookingService.getMyBooking(user, options, filters)
 
     sendResponse(res, ({
         statusCode: 201,
         success: true,
-        message: "Booking create successfully",
-        data: result,
+        message: "Booking retrived successfully",
+        data: result
 
     }))
 })
@@ -64,6 +65,8 @@ const cancelBooking = catchAsync(async (req: Request & { user?: any }, res: Resp
 
     }))
 })
+
+
 const getAssignedBooking = catchAsync(async (req: Request, res: Response) => {
     const options = pick(req.query, ["page", "limit", "sortBy", "sortOrder"])
     const filters = pick(req.query, bookingFilterableFields)
@@ -93,6 +96,48 @@ const updateBookingStatus = catchAsync(async (req: Request, res: Response) => {
     }))
 })
 
+const getAdminStats = catchAsync(async (req: Request, res: Response) => {
+    const result = await bookingService.getAdminStats()
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "Stats retrieved successfully",
+        data: result
+    })
+})
+
+const getGuideStats = catchAsync(async (req: Request, res: Response) => {
+    const result = await bookingService.getGuideStats(req.user)
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "Stats retrieved successfully",
+        data: result
+    })
+})
+
+const getTouristStats = catchAsync(async (req: Request, res: Response) => {
+    const result = await bookingService.getTouristStats(req.user)
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "Stats retrieved successfully",
+        data: result
+    })
+})
+
+const getAllBookings = catchAsync(async (req: Request, res: Response) => {
+    const options = pick(req.query, ["page", "limit", "sortBy", "sortOrder"])
+    const filters = pick(req.query, bookingFilterableFields)
+    const result = await bookingService.getAllBookings(options, filters)
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "Bookings retrieved successfully",
+        data: result
+    })
+})
+
 
 
 export const bookingController = {
@@ -102,4 +147,8 @@ export const bookingController = {
     getAssignedBooking,
     updateBookingStatus,
     completedBooking,
+    getAdminStats,
+    getGuideStats,
+    getTouristStats,
+    getAllBookings
 }

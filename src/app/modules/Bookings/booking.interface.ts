@@ -1,6 +1,5 @@
 export interface ICreateBookingPayload {
     tourId: string;
-    requestDate: string;
-    requestTime: string;
+    bookingDateTime: string,
     message?: string;
 }

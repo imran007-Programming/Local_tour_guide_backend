@@ -2,8 +2,7 @@
 export const bookingFilterableFields = [
     "searchTerm",
     "status",
-    "requestDate",
-    "requestTime",
+    "bookingDateTime",
     "tourId",
     "touristId",
     "createdAt"

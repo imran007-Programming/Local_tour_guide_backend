@@ -16,34 +16,3 @@ export const createUSerZodSchema = z.object({
     // TOURIST fields
     preferences: z.array(z.string()).optional(),
 })
-    .superRefine((data, ctx) => {
-        // GUIDE validation
-        if (data.role === "GUIDE") {
-            if (!data.expertise || data.expertise.length === 0) {
-                ctx.addIssue({
-                    path: ["expertise"],
-                    message: "Expertise is required for GUIDE",
-                    code: z.ZodIssueCode.custom,
-                });
-            }
-
-            if (!data.dailyRate) {
-                ctx.addIssue({
-                    path: ["dailyRate"],
-                    message: "Daily rate is required for GUIDE",
-                    code: z.ZodIssueCode.custom,
-                });
-            }
-        }
-
-        // TOURIST validation
-        if (data.role === "TOURIST") {
-            if (!data.preferences || data.preferences.length === 0) {
-                ctx.addIssue({
-                    path: ["preferences"],
-                    message: "Preferences are required for TOURIST",
-                    code: z.ZodIssueCode.custom,
-                });
-            }
-        }
-    })

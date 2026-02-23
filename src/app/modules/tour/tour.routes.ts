@@ -8,21 +8,35 @@ import { fileUploader } from '../../helper/fileUploader';
 const router = express.Router();
 
 router.get("/", tourController.getAllTourFromDb)
+router.get("/:slug", tourController.getSingleTour)
 
-router.post("/",
+router.post("/create-tour",
     authHelper(Role.GUIDE),
-    fileUploader.upload.array("files"),
+    fileUploader.upload.array("images"),
     validateRequest(createTourZodSchema),
     tourController.createTour)
 
-router.patch("/:tourId",
-    authHelper(Role.GUIDE),
-    fileUploader.upload.array("files"),
+router.put("/:tourId",
+    authHelper(Role.GUIDE, Role.ADMIN),
+    fileUploader.upload.array("images"),
     validateRequest(updateTourZodSchema),
     tourController.updateTour)
 
 router.delete("/:tourId",
     authHelper(Role.GUIDE),
     tourController.deleteTour)
+
+router.post(
+    "/:id/images",
+    authHelper(Role.ADMIN, Role.GUIDE),
+    fileUploader.upload.array("images"),
+    tourController.addTourImages
+);
+
+router.delete(
+    "/:id/images",
+    authHelper(Role.ADMIN, Role.GUIDE),
+    tourController.deleteTourImage
+);
 
 export const tourRoutes = router;

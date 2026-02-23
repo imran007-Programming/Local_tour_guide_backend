@@ -35,7 +35,19 @@ export const updateTourZodSchema = z
         meetingPoint: z.string().min(3, "Meeting point must be at least 3 characters").optional(),
         city: z.string().min(2, "City must be at least 2 characters").optional(),
 
-        languages: z.array(z.string()).min(1, "At least one language is required").optional(),
+        languages: z.preprocess(
+            (val) => {
+                if (typeof val === "string") {
+                    try {
+                        return JSON.parse(val);
+                    } catch {
+                        return val;
+                    }
+                }
+                return val;
+            },
+            z.array(z.string()).optional()
+        ),
         category: z.string().optional(),
         isActive: z.boolean().optional()
     })

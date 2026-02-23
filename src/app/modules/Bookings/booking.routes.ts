@@ -5,6 +5,14 @@ import { Role } from "@prisma/client";
 import { authController } from "../Auth/auth.controller";
 const router = express.Router()
 
+// Stats routes
+router.get("/stats", authHelper(Role.ADMIN), bookingController.getAdminStats)
+router.get("/assigned/stats", authHelper(Role.GUIDE), bookingController.getGuideStats)
+router.get("/me/stats", authHelper(Role.TOURIST), bookingController.getTouristStats)
+
+// Admin get all bookings
+router.get("/", authHelper(Role.ADMIN), bookingController.getAllBookings)
+
 // get the tourist booking list
 router.get("/me", authHelper(Role.TOURIST), bookingController.getMyBookings)
 

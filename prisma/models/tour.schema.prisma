@@ -1,6 +1,7 @@
 model Tour {
     id           String   @id @default(uuid())
     title        String
+    slug         String   @unique @default("")
     description  String
     itinerary    String
     price        Float
