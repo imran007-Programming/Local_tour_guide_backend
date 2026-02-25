@@ -7,6 +7,7 @@ import { createTourZodSchema, updateTourZodSchema } from './tour.validation';
 import { fileUploader } from '../../helper/fileUploader';
 const router = express.Router();
 
+router.get("/categories", tourController.getCategories)
 router.get("/", tourController.getAllTourFromDb)
 router.get("/:slug", tourController.getSingleTour)
 

@@ -66,7 +66,7 @@ const createBooking = async (
             if (error.code === "P2002") {
                 throw new ApiError(
                     409,
-                    "This slot is already booked"
+                    "This time or date slot is already booked"
                 );
             }
             throw error;
@@ -338,7 +338,7 @@ const completedBooking = async (user: IUser, bookingId: any) => {
 // update the booking status (CONFIRM/CANCEL)  --->(by guide)
 const updateBookingStatus = async (user: IUser, bookingId: any, payload: any) => {
     const userId = user.userId
-    console.log(payload)
+
 
     if (user.role !== Role.GUIDE) {
         throw new ApiError(httpStatus.NOT_FOUND, "Only guides can respond to bookings")

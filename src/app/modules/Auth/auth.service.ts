@@ -24,42 +24,50 @@ const createUser = async (req: Request) => {
         String(payload.password),
         Number(config.salt)
     )
-    const result = await prisma.$transaction(async (tnx: any) => {
-        const user = await tnx.user.create({
-            data: {
-                name: payload.name,
-                email: payload.email,
-                password: hashedPassword,
-                role: payload.role,
-                profilePic: payload.profilePic,
-                bio: payload.bio,
-                languages: payload.languages || [],
 
-            },
-        });
-        //if user is Guide create Guide
-        if (payload.role === Role.GUIDE) {
-            await tnx.guide.create({
+    try {
+        const result = await prisma.$transaction(async (tnx: any) => {
+            const user = await tnx.user.create({
                 data: {
-                    userId: user.id,
-                    expertise: payload.expertise,
-                    dailyRate: payload.dailyRate
-                }
-            })
-        }
+                    name: payload.name,
+                    email: payload.email,
+                    password: hashedPassword,
+                    role: payload.role,
+                    profilePic: payload.profilePic,
+                    bio: payload.bio,
+                    languages: payload.languages || [],
 
-        if (payload.role === Role.TOURIST) {
-            await tnx.tourist.create({
-                data: {
-                    userId: user.id,
-                    preferences: payload.preferences || [],
                 },
             });
-        }
-        return user;
-    })
+            //if user is Guide create Guide
+            if (payload.role === Role.GUIDE) {
+                await tnx.guide.create({
+                    data: {
+                        userId: user.id,
+                        expertise: payload.expertise,
+                        dailyRate: payload.dailyRate
+                    }
+                })
+            }
 
-    return result
+            if (payload.role === Role.TOURIST) {
+                await tnx.tourist.create({
+                    data: {
+                        userId: user.id,
+                        preferences: payload.preferences || [],
+                    },
+                });
+            }
+            return user;
+        })
+
+        return result
+    } catch (error: any) {
+        if (error.code === 'P2002') {
+            throw new ApiError(httpStatus.CONFLICT, "Email already exists")
+        }
+        throw error
+    }
 }
 
 

@@ -35,13 +35,14 @@ model Guide {
 }
 
 model Tourist {
-    id          String    @id @default(uuid())
-    userId      String    @unique
-    preferences String[]  @default([])
-    user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+    id          String     @id @default(uuid())
+    userId      String     @unique
+    preferences String[]   @default([])
+    user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
     booking     Booking[]
-    createdAt   DateTime  @default(now())
-    updatedAt   DateTime  @updatedAt
+    wishlist    Wishlist[]
+    createdAt   DateTime   @default(now())
+    updatedAt   DateTime   @updatedAt
     reviews     Review[]
 
     @@map("tourists")

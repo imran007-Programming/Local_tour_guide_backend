@@ -121,7 +121,8 @@ const getAllTour = async (options: any, filters: any) => {
         take: limit,
         orderBy: {
             [sortBy]: sortOrder
-        }
+        },
+
     })
     const total = await prisma.tour.count({
         where: whereConditions
@@ -139,7 +140,17 @@ const getAllTour = async (options: any, filters: any) => {
 }
 const getSingleTour = async (slug: string) => {
     return await prisma.tour.findUnique({
-        where: { slug }
+        where: { slug },
+        include: {
+            guide: {
+                select: {
+                    id: true,
+                    expertise: true,
+                    dailyRate: true,
+                    user: true
+                }
+            }
+        }
     })
 }
 const updateTour = async (tourId: string, payload: Partial<TCreateTourPayload>) => {
@@ -153,6 +164,13 @@ const updateTour = async (tourId: string, payload: Partial<TCreateTourPayload>) 
 }
 
 const deleteTour = async (tourId: string) => {
+    const bookings = await prisma.booking.count({
+        where: { tourId },
+    });
+
+    if (bookings > 0) {
+        throw new ApiError(httpStatus.BAD_REQUEST, "Cannot delete tour with existing bookings");
+    }
 
     return await prisma.tour.delete({
         where: {
@@ -222,6 +240,15 @@ const deleteTourImage = async (
     });
 };
 
+const getCategories = async () => {
+    const categories = await prisma.tour.findMany({
+        where: { isActive: true },
+        select: { category: true },
+        distinct: ['category']
+    })
+    return categories.map(c => c.category)
+}
+
 export const tourService = {
     createTour,
     getAllTour,
@@ -229,5 +256,6 @@ export const tourService = {
     updateTour,
     deleteTour,
     addTourImages,
-    deleteTourImage
+    deleteTourImage,
+    getCategories
 }

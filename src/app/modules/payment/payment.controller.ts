@@ -25,54 +25,11 @@ const createStripeIntent = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
-/* Stripe webhook */
-export const handleStripeWebhook = async (req: Request, res: Response) => {
-    const sig = req.headers["stripe-signature"] as string;
 
-    if (!sig) {
-        return res.status(400).send("Missing Stripe signature");
-    }
-
-    let event;
-    try {
-        event = stripe.webhooks.constructEvent(
-            req.body,
-            sig,
-            config.Stripe_Secret_webhook!
-        );
-    } catch (err) {
-        console.error("Webhook verification failed", err);
-        return res.status(400).send("Webhook error");
-    }
-
-
-
-    if (event.type === "checkout.session.completed") {
-        const session = event.data.object as any;
-        console.log(session.metadata)
-        const bookingId = session.metadata.bookingId;
-
-        await prisma.payment.update({
-            where: { bookingId },
-            data: {
-                status: PaymentStatus.PAID,
-                paymentIntentId: session.payment_intent,
-            },
-        });
-
-        await prisma.booking.update({
-            where: { id: bookingId },
-            data: { status: "CONFIRMED" as any }
-        });
-    }
-
-
-    res.json({ received: true });
-};
 
 
 const createCheckoutSession = async (req: Request, res: Response) => {
-    const { bookingId } = req.body;
+    const { bookingId, successUrl, cancelUrl } = req.body;
 
     // 1. find booking
     const booking = await prisma.booking.findUnique({
@@ -104,11 +61,18 @@ const createCheckoutSession = async (req: Request, res: Response) => {
                 quantity: 1,
             },
         ],
-        success_url: "https://www.programming-hero.com",
-        cancel_url: "https://mail.google.com/mail/u/0/",
+        success_url: successUrl,
+        cancel_url: cancelUrl,
         metadata: {
             bookingId: booking.id,
+            transactionId: payment.transactionId
         },
+        payment_intent_data: {
+            metadata: {
+                bookingId: booking.id,
+                transactionId: payment.transactionId
+            }
+        }
     });
     await prisma.payment.update({
         where: { id: payment.id },
@@ -119,6 +83,78 @@ const createCheckoutSession = async (req: Request, res: Response) => {
 
 
     res.json({ url: session.url });
+};
+
+/* Stripe webhook */
+export const handleStripeWebhook = async (req: Request, res: Response) => {
+    const sig = req.headers["stripe-signature"] as string;
+
+    if (!sig) {
+        return res.status(400).send("Missing Stripe signature");
+    }
+
+    let event;
+    try {
+        event = stripe.webhooks.constructEvent(
+            req.body,
+            sig,
+            config.Stripe_Secret_webhook!
+        );
+    } catch (err) {
+        console.error("Webhook verification failed", err);
+        return res.status(400).send("Webhook error");
+    }
+
+
+
+
+
+    if (event.type === "checkout.session.completed") {
+        const session = event.data.object as any;
+
+        const bookingId = session.metadata.bookingId;
+
+        await prisma.payment.update({
+            where: { bookingId },
+            data: {
+                status: PaymentStatus.PAID,
+                paymentIntentId: session.payment_intent,
+                paidAt: new Date()
+            },
+        });
+
+        await prisma.booking.update({
+            where: { id: bookingId },
+            data: { status: "CONFIRMED" as any }
+        });
+    }
+
+    if (event.type === "checkout.session.expired") {
+
+        const session = event.data.object as any;
+        const bookingId = session.metadata.bookingId;
+
+        await prisma.payment.update({
+            where: { bookingId },
+            data: {
+                status: PaymentStatus.FAILED
+            },
+        });
+    }
+
+    if (event.type === "payment_intent.payment_failed") {
+        const paymentIntent = event.data.object.payment_details?.order_reference as any;
+
+        await prisma.payment.updateMany({
+            where: { paymentIntentId: paymentIntent.id },
+            data: {
+                status: PaymentStatus.FAILED
+            },
+        });
+    }
+
+
+    res.json({ received: true });
 };
 
 

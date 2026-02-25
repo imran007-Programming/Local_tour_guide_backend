@@ -1,0 +1,12 @@
+model Wishlist {
+    id        String   @id @default(uuid())
+    touristId String
+    tourId    String
+    createdAt DateTime @default(now())
+
+    tourist Tourist @relation(fields: [touristId], references: [id], onDelete: Cascade)
+    tour    Tour    @relation(fields: [tourId], references: [id], onDelete: Cascade)
+
+    @@unique([touristId, tourId])
+    @@map("wishlists")
+}

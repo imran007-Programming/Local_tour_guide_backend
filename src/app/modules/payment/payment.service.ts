@@ -50,7 +50,8 @@ const createStripeIntent = async (
             data: {
                 bookingId,
                 amount: tour?.price!,
-                status: PaymentStatus.PENDING
+                status: PaymentStatus.PENDING,
+                transactionId: `TXN-${Date.now()}-${Math.random().toString(36).substring(2, 9).toUpperCase()}`
             }
         });
     }
@@ -80,29 +81,11 @@ const createStripeIntent = async (
     };
 };
 
-const handleWebhook = async (event: any) => {
-    if (event.type === "payment_intent.succeeded") {
-        const paymentIntent = event.data.object;
-        const { bookingId, paymentId } = paymentIntent.metadata;
-
-        await prisma.payment.update({
-            where: { id: paymentId },
-            data: { status: PaymentStatus.PAID }
-        });
-
-        await prisma.booking.update({
-            where: { id: bookingId },
-            data: { status: BookingStatus.CONFIRMED }
-        });
-    }
-};
-
 
 
 
 
 
 export const paymentService = {
-    createStripeIntent,
-    handleWebhook
+    createStripeIntent
 }

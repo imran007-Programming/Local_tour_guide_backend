@@ -6,6 +6,7 @@ model Payment {
   status          PaymentStatus
   paymentIntentId String?       @unique
   transactionId   String?
+  paidAt          DateTime?
 
   booking Booking @relation(fields: [bookingId], references: [id])
 

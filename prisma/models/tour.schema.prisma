@@ -1,7 +1,7 @@
 model Tour {
-    id           String   @id @default(uuid())
+    id           String     @id @default(uuid())
     title        String
-    slug         String   @unique @default("")
+    slug         String     @unique @default("")
     description  String
     itinerary    String
     price        Float
@@ -18,9 +18,10 @@ model Tour {
     guideId String
     guide   Guide  @relation(fields: [guideId], references: [id])
 
-    createdAt DateTime  @default(now())
-    updatedAt DateTime  @updatedAt
+    createdAt DateTime    @default(now())
+    updatedAt DateTime    @updatedAt
     bookings  Booking[]
+    wishlist  Wishlist[]
 
     @@map("tours")
 }

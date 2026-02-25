@@ -126,6 +126,16 @@ const deleteTourImage = catchAsync(
     }
 );
 
+const getCategories = catchAsync(async (req: Request, res: Response) => {
+    const result = await tourService.getCategories()
+    sendResponse(res, {
+        statusCode: 200,
+        success: true,
+        message: "Categories retrieved successfully",
+        data: result
+    })
+})
+
 
 
 export const tourController = {
@@ -135,5 +145,6 @@ export const tourController = {
     updateTour,
     deleteTour,
     addTourImages,
-    deleteTourImage
+    deleteTourImage,
+    getCategories
 }
