@@ -55,7 +55,7 @@ const authHelper = (...roles: string[]) => {
                             role: decodedRefresh.role,
                         },
                         config.ACCESS_TOKEN_SECRET,
-                        { expiresIn: "1m" }
+                        { expiresIn: "15m" }
                     );
 
                     //  Set new cookie
@@ -63,7 +63,7 @@ const authHelper = (...roles: string[]) => {
                         httpOnly: true,
                         secure: true,
                         sameSite: "none",
-                        maxAge: 60 * 1000,
+                        maxAge: 15 * 60 * 1000,
                     });
 
                     decodedUser = decodedRefresh;
