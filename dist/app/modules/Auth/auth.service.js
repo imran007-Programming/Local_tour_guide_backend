@@ -72,7 +72,7 @@ const login = async (payload) => {
     if (!isCorrectPassword) {
         throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, "password is incorrect");
     }
-    const accessToken = tokenGenarator_1.jwtHelper.genarateToken({ userId: user.id, email: user.email, role: user.role }, config_1.default.ACCESS_TOKEN_SECRET, "1m");
+    const accessToken = tokenGenarator_1.jwtHelper.genarateToken({ userId: user.id, email: user.email, role: user.role }, config_1.default.ACCESS_TOKEN_SECRET, "15m");
     const refreshToken = tokenGenarator_1.jwtHelper.genarateToken({ userId: user.id, email: user.email, role: user.role }, config_1.default.REFRESH_TOKEN_SECRET, "90d");
     return {
         accessToken,
