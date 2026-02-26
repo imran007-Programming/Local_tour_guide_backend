@@ -21,13 +21,13 @@ const createUser = (0, catchAsync_1.catchAsync)(async (req, res) => {
 const login = (0, catchAsync_1.catchAsync)(async (req, res) => {
     const result = await auth_service_1.authService.login(req.body);
     const { accessToken, refreshToken } = result;
-    res.cookie("accessToken", accessToken, {
-        httpOnly: true,
-        secure: true,
-        sameSite: "none",
-        maxAge: 15 * 60 * 1000,
-        path: "/",
-    });
+    // res.cookie("accessToken", accessToken, {
+    //     httpOnly: true,
+    //     secure: true,
+    //     sameSite: "none" as const,
+    //     maxAge: 15 * 60 * 1000,
+    //     path: "/",
+    // });
     res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
         secure: true,
