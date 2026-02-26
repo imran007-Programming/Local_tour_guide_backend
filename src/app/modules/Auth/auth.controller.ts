@@ -22,13 +22,13 @@ const login = catchAsync(async (req: Request, res: Response) => {
 
     const result = await authService.login(req.body)
     const { accessToken, refreshToken } = result;
-    res.cookie("accessToken", accessToken, {
-        httpOnly: true,
-        secure: true,
-        sameSite: "none" as const,
-        maxAge: 15 * 60 * 1000,
-        path: "/",
-    });
+    // res.cookie("accessToken", accessToken, {
+    //     httpOnly: true,
+    //     secure: true,
+    //     sameSite: "none" as const,
+    //     maxAge: 15 * 60 * 1000,
+    //     path: "/",
+    // });
 
     res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
