@@ -3,13 +3,10 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "ts-node-dev --respawn --transpile-only ./src/server.ts",
-    "migrate": "npx prisma migrate dev",
-    "generate": "npx prisma generate",
-    "reset": "npx prisma migrate reset",
-    "build": "tsc",
-    "start": "node dist/index.js"
+    "postinstall": "prisma generate",
+    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+    "build": "prisma migrate deploy && tsc",
+    "start": "node dist/server.js"
   },
   "keywords": [],
   "author": "",

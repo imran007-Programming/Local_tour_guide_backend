@@ -4,17 +4,9 @@ import path from "path";
 import { v2 as cloudinary, UploadApiResponse } from "cloudinary";
 import config from "../config";
 import ApiError from "../error/ApiError";
+import { Readable } from "stream";
 
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, path.join(process.cwd(), "/uploads"));
-    },
-    filename: function (req, file, cb) {
-        const uniqueSuffix =
-            Date.now() + "-" + Math.round(Math.random() * 1e9);
-        cb(null, file.fieldname + "-" + uniqueSuffix);
-    },
-});
+const storage = multer.memoryStorage();
 
 const upload = multer({ storage: storage });
 
@@ -31,21 +23,23 @@ const uploadToCloudinary = async (
 ): Promise<UploadApiResponse> => {
     configureCloudinary();
 
-    try {
-        const uploadResult = await cloudinary.uploader.upload(
-            file.path,
+    return new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
             {
-                public_id: file.filename,
+                public_id: `${file.fieldname}-${Date.now()}-${Math.round(Math.random() * 1e9)}`,
+            },
+            (error, result) => {
+                if (error) {
+                    console.log(error);
+                    reject(new ApiError(httpStatus.BAD_REQUEST, "Image upload failed"));
+                } else {
+                    resolve(result!);
+                }
             }
         );
-        return uploadResult;
-    } catch (error) {
-        console.log(error);
-        throw new ApiError(
-            httpStatus.BAD_REQUEST,
-            "Image upload failed"
-        );
-    }
+
+        Readable.from(file.buffer).pipe(uploadStream);
+    });
 };
 
 const deleteFromCloudinary = async (

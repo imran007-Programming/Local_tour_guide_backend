@@ -88,3 +88,60 @@ npm run dev
 ### Payment
 - `POST /api/payment/create-intent` - Create payment intent (Auth: TOURIST)
 - `POST /api/payment/webhook` - Stripe webhook
+
+## Deployment
+
+### Option 1: Railway
+
+1. Create account at [Railway](https://railway.app)
+2. Install Railway CLI: `npm i -g @railway/cli`
+3. Login: `railway login`
+4. Initialize: `railway init`
+5. Add PostgreSQL: `railway add`
+6. Set environment variables in Railway dashboard
+7. Deploy: `railway up`
+
+### Option 2: Render
+
+1. Create account at [Render](https://render.com)
+2. Create new Web Service
+3. Connect your GitHub repository
+4. Configure:
+   - Build Command: `npm install && npm run build && npx prisma generate`
+   - Start Command: `npm start`
+5. Add PostgreSQL database from Render dashboard
+6. Set environment variables in Render dashboard
+7. Deploy automatically on push
+
+### Option 3: AWS (Elastic Beanstalk)
+
+1. Install AWS CLI and EB CLI
+2. Initialize: `eb init`
+3. Create RDS PostgreSQL instance
+4. Set environment variables: `eb setenv KEY=value`
+5. Deploy: `eb create` or `eb deploy`
+
+### Option 4: Vercel (Serverless)
+
+1. Install Vercel CLI: `npm i -g vercel`
+2. Create `vercel.json`:
+```json
+{
+  "version": 2,
+  "builds": [{ "src": "src/server.ts", "use": "@vercel/node" }],
+  "routes": [{ "src": "/(.*)", "dest": "src/server.ts" }]
+}
+```
+3. Deploy: `vercel`
+4. Add PostgreSQL from external provider (Neon, Supabase)
+5. Set environment variables in Vercel dashboard
+
+### Pre-deployment Checklist
+
+- [ ] Set `NODE_ENV=production`
+- [ ] Configure production DATABASE_URL
+- [ ] Run migrations: `npx prisma migrate deploy`
+- [ ] Set all environment variables
+- [ ] Update CORS origins
+- [ ] Configure Stripe webhook URL
+- [ ] Test all endpoints

@@ -1,0 +1,20 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.AuthRoutes = void 0;
+const express_1 = __importDefault(require("express"));
+const auth_controller_1 = require("./auth.controller");
+const fileUploader_1 = require("../../helper/fileUploader");
+const auth_validation_1 = require("./auth.validation");
+const validateRequest_1 = __importDefault(require("../../middleware/validateRequest"));
+const authHelper_1 = __importDefault(require("../../middleware/authHelper"));
+const client_1 = require("@prisma/client");
+const router = express_1.default.Router();
+router.get("/me", (0, authHelper_1.default)(client_1.Role.ADMIN, client_1.Role.GUIDE, client_1.Role.TOURIST), auth_controller_1.authController.getMe);
+router.post("/register", fileUploader_1.fileUploader.upload.single("file"), (0, validateRequest_1.default)(auth_validation_1.createUSerZodSchema), auth_controller_1.authController.createUser);
+router.post("/login", auth_controller_1.authController.login);
+router.post("/refreshToken", auth_controller_1.authController.getRefreshToken);
+router.post("/logout", auth_controller_1.authController.logout);
+exports.AuthRoutes = router;

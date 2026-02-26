@@ -13,6 +13,7 @@ export default {
     Stripe_Secret_key: process.env.STRIPE_SECRET_KEY,
     Stripe_Secret_webhook: process.env.STRIPE_SECRET_WEBHOOK,
     ACCESS_TOKEN_SECRET: process.env.ACCESS_TOKEN_SECRET!,
-    REFRESH_TOKEN_SECRET: process.env.REFRESH_TOKEN_SECRET!
+    REFRESH_TOKEN_SECRET: process.env.REFRESH_TOKEN_SECRET!,
+    FRONTEND_URL: process.env.FRONTEND_URL
 
 };

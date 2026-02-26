@@ -1,0 +1,23 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.tourRoutes = void 0;
+const express_1 = __importDefault(require("express"));
+const authHelper_1 = __importDefault(require("../../middleware/authHelper"));
+const client_1 = require("@prisma/client");
+const tour_controller_1 = require("./tour.controller");
+const validateRequest_1 = __importDefault(require("../../middleware/validateRequest"));
+const tour_validation_1 = require("./tour.validation");
+const fileUploader_1 = require("../../helper/fileUploader");
+const router = express_1.default.Router();
+router.get("/categories", tour_controller_1.tourController.getCategories);
+router.get("/", tour_controller_1.tourController.getAllTourFromDb);
+router.get("/:slug", tour_controller_1.tourController.getSingleTour);
+router.post("/create-tour", (0, authHelper_1.default)(client_1.Role.GUIDE), fileUploader_1.fileUploader.upload.array("images"), (0, validateRequest_1.default)(tour_validation_1.createTourZodSchema), tour_controller_1.tourController.createTour);
+router.put("/:tourId", (0, authHelper_1.default)(client_1.Role.GUIDE, client_1.Role.ADMIN), fileUploader_1.fileUploader.upload.array("images"), (0, validateRequest_1.default)(tour_validation_1.updateTourZodSchema), tour_controller_1.tourController.updateTour);
+router.delete("/:tourId", (0, authHelper_1.default)(client_1.Role.GUIDE), tour_controller_1.tourController.deleteTour);
+router.post("/:id/images", (0, authHelper_1.default)(client_1.Role.ADMIN, client_1.Role.GUIDE), fileUploader_1.fileUploader.upload.array("images"), tour_controller_1.tourController.addTourImages);
+router.delete("/:id/images", (0, authHelper_1.default)(client_1.Role.ADMIN, client_1.Role.GUIDE), tour_controller_1.tourController.deleteTourImage);
+exports.tourRoutes = router;

@@ -11,7 +11,7 @@ import { handleStripeWebhook } from "./app/modules/payment/payment.controller";
 const app = express();
 app.use(
     cors({
-        origin: "http://localhost:3000",
+        origin: config.FRONTEND_URL,
         credentials: true,
     })
 );
