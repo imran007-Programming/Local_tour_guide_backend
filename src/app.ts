@@ -16,11 +16,12 @@ app.use(
     })
 );
 
-app.post(
-    "/payments/stripe/webhook",
-    express.raw({ type: "application/json" }),
-    handleStripeWebhook
-)
+// app.post(
+//     "/payments/stripe/webhook",
+//     express.raw({ type: "application/json" }),
+//     handleStripeWebhook
+// )
+
 
 // Parser
 app.use(express.json())
@@ -28,6 +29,14 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser())
 app.use("/api", router);
 
+// Use JSON parser for all non-webhook routes
+app.use((req, res, next) => {
+    if (req.originalUrl === "/api/payments/webhook") {
+        next();
+    } else {
+        express.json()(req, res, next);
+    }
+});
 
 app.get("/", (req, res) => {
     res.send({

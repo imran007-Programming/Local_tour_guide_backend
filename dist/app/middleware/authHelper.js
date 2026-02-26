@@ -10,7 +10,14 @@ const config_1 = __importDefault(require("../config"));
 const authHelper = (...roles) => {
     return async (req, res, next) => {
         try {
-            const token = req.cookies["accessToken"];
+            // Check cookie first, then Authorization header
+            let token = req.cookies["accessToken"];
+            if (!token) {
+                const authHeader = req.headers.authorization;
+                if (authHeader && authHeader.startsWith('Bearer ')) {
+                    token = authHeader.substring(7);
+                }
+            }
             if (!token) {
                 throw new ApiError_1.default(http_status_1.default.UNAUTHORIZED, "unauthorized access denied");
             }

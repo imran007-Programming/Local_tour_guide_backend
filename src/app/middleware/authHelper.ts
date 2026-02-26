@@ -8,14 +8,22 @@ import jwt from "jsonwebtoken";
 const authHelper = (...roles: string[]) => {
     return async (req: Request & { user?: any }, res: Response, next: NextFunction) => {
         try {
-            const token = req.cookies["accessToken"]
+            // Check cookie first, then Authorization header
+            let token = req.cookies["accessToken"];
+
+            if (!token) {
+                const authHeader = req.headers.authorization;
+                if (authHeader && authHeader.startsWith('Bearer ')) {
+                    token = authHeader.substring(7);
+                }
+            }
+
             if (!token) {
                 throw new ApiError(httpStatus.UNAUTHORIZED, "unauthorized access denied")
             }
+
             const verifyUser = await jwtHelper.verifyToken(token, config.ACCESS_TOKEN_SECRET)
-
             req.user = verifyUser
-
 
             if (roles.length && !roles.includes(verifyUser.role)) {
                 throw new ApiError(httpStatus.UNAUTHORIZED, "unauthorized access denied")
@@ -25,8 +33,8 @@ const authHelper = (...roles: string[]) => {
             next(error)
         }
     }
-
 }
+
 
 
 export default authHelper;

@@ -160,5 +160,6 @@ export const handleStripeWebhook = async (req: Request, res: Response) => {
 
 export const paymentController = {
     createStripeIntent,
-    createCheckoutSession
+    createCheckoutSession,
+    handleStripeWebhook
 };
