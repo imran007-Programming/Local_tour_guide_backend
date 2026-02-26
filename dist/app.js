@@ -23,13 +23,14 @@ app.use(express_1.default.urlencoded({ extended: true }));
 app.use((0, cookie_parser_1.default)());
 app.use("/api", routes_1.default);
 // Use JSON parser for all non-webhook routes
-// app.use((req, res, next) => {
-//     if (req.originalUrl === "/payments/stripe/webhook") {
-//         next();
-//     } else {
-//         express.json()(req, res, next);
-//     }
-// });
+app.use((req, res, next) => {
+    if (req.originalUrl === "api/payments/stripe/webhook") {
+        next();
+    }
+    else {
+        express_1.default.json()(req, res, next);
+    }
+});
 app.get("/", (req, res) => {
     res.send({
         message: "Server is running..",

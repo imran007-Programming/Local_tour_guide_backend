@@ -31,7 +31,7 @@ app.use("/api", router);
 
 // Use JSON parser for all non-webhook routes
 app.use((req, res, next) => {
-    if (req.originalUrl === "api/payments/stripe/webhook") {
+    if (req.originalUrl === "/api/payments/stripe/webhook") {
         next();
     } else {
         express.json()(req, res, next);
