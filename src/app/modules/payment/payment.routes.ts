@@ -16,6 +16,12 @@ router.post(
     paymentController.createCheckoutSession
 );
 
+router.post(
+    "/webhook",
+    express.json({ type: "application/json" }),
+    paymentController.handleStripeWebhook
+);
+
 
 
 export const paymentRoutes = router
