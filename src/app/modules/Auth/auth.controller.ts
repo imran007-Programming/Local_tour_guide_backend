@@ -27,7 +27,7 @@ const login = catchAsync(async (req: Request, res: Response) => {
         httpOnly: true,
         secure: config.node_env === "production",
         sameSite: config.node_env === "production" ? "none" : "lax",
-        maxAge: 10 * 1000, // 10 seconds for testing
+        maxAge: 15 * 60 * 1000, // 15 minutes
         path: "/",
     });
 
@@ -101,7 +101,7 @@ const getRefreshToken = catchAsync(async (req: Request, res: Response) => {
             httpOnly: true,
             secure: config.node_env === "production",
             sameSite: config.node_env === "production" ? "none" : "lax",
-            maxAge: 10 * 1000, // 10 seconds for testing
+            maxAge: 15 * 60 * 1000, // 15 minutes
             path: "/",
         });
 

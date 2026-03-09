@@ -25,7 +25,7 @@ const login = (0, catchAsync_1.catchAsync)(async (req, res) => {
         httpOnly: true,
         secure: config_1.default.node_env === "production",
         sameSite: config_1.default.node_env === "production" ? "none" : "lax",
-        maxAge: 10 * 1000, // 10 seconds for testing
+        maxAge: 15 * 60 * 1000, // 15 minutes
         path: "/",
     });
     res.cookie("refreshToken", refreshToken, {
@@ -81,7 +81,7 @@ const getRefreshToken = (0, catchAsync_1.catchAsync)(async (req, res) => {
             httpOnly: true,
             secure: config_1.default.node_env === "production",
             sameSite: config_1.default.node_env === "production" ? "none" : "lax",
-            maxAge: 10 * 1000, // 10 seconds for testing
+            maxAge: 15 * 60 * 1000, // 15 minutes
             path: "/",
         });
         (0, sendResponse_1.default)(res, {
