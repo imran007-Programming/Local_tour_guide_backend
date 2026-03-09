@@ -26,7 +26,7 @@ const authHelper = (...roles) => {
                             httpOnly: true,
                             secure: config_1.default.node_env === "production",
                             sameSite: "lax",
-                            maxAge: 10 * 1000 // 10 seconds for testing
+                            maxAge: 15 * 60 * 1000
                         });
                         token = newAccessToken;
                     }
