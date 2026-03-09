@@ -13,6 +13,7 @@ const review_routes_1 = require("../modules/review/review.routes");
 const payment_routes_1 = require("../modules/payment/payment.routes");
 const tourist_routes_1 = require("../modules/tourist/tourist.routes");
 const notification_routes_1 = require("../modules/notification/notification.routes");
+const chat_routes_1 = require("../modules/chat/chat.routes");
 const router = express_1.default.Router();
 const moduleRoutes = [
     {
@@ -50,6 +51,10 @@ const moduleRoutes = [
     {
         path: "/notifications",
         route: notification_routes_1.notificationRoutes
+    },
+    {
+        path: "/chat",
+        route: chat_routes_1.chatRoutes
     }
 ];
 moduleRoutes.forEach((route) => {

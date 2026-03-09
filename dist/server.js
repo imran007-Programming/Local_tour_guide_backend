@@ -3,12 +3,16 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const http_1 = require("http");
 const app_1 = __importDefault(require("./app"));
 const config_1 = __importDefault(require("./app/config"));
+const socket_1 = require("./app/lib/socket");
 let server;
 async function bootstrap() {
     try {
-        server = app_1.default.listen(config_1.default.port, () => {
+        server = (0, http_1.createServer)(app_1.default);
+        (0, socket_1.initSocket)(server);
+        server.listen(config_1.default.port, () => {
             console.log(`🚀server is running on http://localhost:${config_1.default.port}`);
         });
         // handle server shutdown gracefully

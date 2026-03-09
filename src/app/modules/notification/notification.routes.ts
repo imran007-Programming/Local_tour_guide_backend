@@ -5,6 +5,7 @@ import authHelper from "../../middleware/authHelper";
 const router = Router();
 
 router.get("/", authHelper(), notificationController.getUserNotifications);
+router.patch("/read-all", authHelper(), notificationController.markAllAsRead);
 router.post("/:id/read", authHelper(), notificationController.markAsRead);
 router.post("/read-all", authHelper(), notificationController.markAllAsRead);
 router.delete("/:id", authHelper(), notificationController.deleteNotification);

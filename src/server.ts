@@ -1,15 +1,19 @@
 import express from "express";
 import { Server } from "http";
+import { createServer } from "http";
 import app from "./app";
 import config from "./app/config";
+import { initSocket } from "./app/lib/socket";
 let server: Server;
 
 async function bootstrap() {
     try {
-        server = app.listen(config.port, () => {
+        server = createServer(app);
+        initSocket(server);
+        
+        server.listen(config.port, () => {
             console.log(`🚀server is running on http://localhost:${config.port}`);
         });
-
         // handle server shutdown gracefully
         const exitHandler = (code = 0) => {
             if (server) {
