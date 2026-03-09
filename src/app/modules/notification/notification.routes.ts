@@ -1,12 +1,12 @@
-import express from "express";
+import { Router } from "express";
 import { notificationController } from "./notification.controller";
-import auth from "../../middleware/authHelper";
+import authHelper from "../../middleware/authHelper";
 
-const router = express.Router();
+const router = Router();
 
-router.get("/", auth(), notificationController.getUserNotifications);
-router.patch("/:id/read", auth(), notificationController.markAsRead);
-router.patch("/read-all", auth(), notificationController.markAllAsRead);
-router.delete("/:id", auth(), notificationController.deleteNotification);
+router.get("/", authHelper(), notificationController.getUserNotifications);
+router.post("/:id/read", authHelper(), notificationController.markAsRead);
+router.post("/read-all", authHelper(), notificationController.markAllAsRead);
+router.delete("/:id", authHelper(), notificationController.deleteNotification);
 
 export const notificationRoutes = router;

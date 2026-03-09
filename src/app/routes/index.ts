@@ -8,7 +8,6 @@ import { reviewRoutes } from '../modules/review/review.routes';
 import { paymentRoutes } from '../modules/payment/payment.routes';
 import { touristRoutes } from '../modules/tourist/tourist.routes';
 import { notificationRoutes } from '../modules/notification/notification.routes';
-import { chatRoutes } from '../modules/chat/chat.routes';
 const router = express.Router()
 
 const moduleRoutes = [
@@ -47,10 +46,6 @@ const moduleRoutes = [
     {
         path: "/notifications",
         route: notificationRoutes
-    },
-    {
-        path: "/chat",
-        route: chatRoutes
     }
 
 ]
