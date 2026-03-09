@@ -19,8 +19,15 @@ const createUser = (0, catchAsync_1.catchAsync)(async (req, res) => {
     });
 });
 const login = (0, catchAsync_1.catchAsync)(async (req, res) => {
+    console.log("=== Login Debug ===");
+    console.log("[login] Request body:", { email: req.body.email });
+    console.log("[login] Origin:", req.headers.origin);
     const result = await auth_service_1.authService.login(req.body);
     const { accessToken, refreshToken } = result;
+    console.log("[login] Tokens generated:", {
+        accessToken: accessToken ? `${accessToken.substring(0, 20)}...` : "missing",
+        refreshToken: refreshToken ? `${refreshToken.substring(0, 20)}...` : "missing"
+    });
     res.cookie("accessToken", accessToken, {
         httpOnly: true,
         secure: true,
@@ -35,6 +42,7 @@ const login = (0, catchAsync_1.catchAsync)(async (req, res) => {
         maxAge: 90 * 24 * 60 * 60 * 1000,
         path: "/",
     });
+    console.log("[login] ✅ Cookies set successfully");
     (0, sendResponse_1.default)(res, {
         statusCode: 201,
         success: true,
@@ -99,8 +107,12 @@ const getRefreshToken = (0, catchAsync_1.catchAsync)(async (req, res) => {
     }
 });
 const getMe = (0, catchAsync_1.catchAsync)(async (req, res) => {
+    console.log("=== getMe Debug ===");
+    console.log("[getMe] User from token:", req.user);
+    console.log("[getMe] Origin:", req.headers.origin);
     const user = req.user;
     const result = await auth_service_1.authService.getME(user);
+    console.log("[getMe] ✅ User data retrieved");
     (0, sendResponse_1.default)(res, {
         statusCode: 201,
         success: true,

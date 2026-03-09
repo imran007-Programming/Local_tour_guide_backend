@@ -8,6 +8,13 @@ import jwt from "jsonwebtoken";
 const authHelper = (...roles: string[]) => {
     return async (req: Request & { user?: any }, res: Response, next: NextFunction) => {
         try {
+            console.log("=== authHelper Debug ===");
+            console.log("[authHelper] Request URL:", req.originalUrl);
+            console.log("[authHelper] Request method:", req.method);
+            console.log("[authHelper] Origin:", req.headers.origin);
+            console.log("[authHelper] Cookies:", Object.keys(req.cookies));
+            console.log("[authHelper] Authorization header:", req.headers.authorization ? `exists (${req.headers.authorization.substring(0, 30)}...)` : "missing");
+
             // Check cookie first, then Authorization header
             let token = req.cookies["accessToken"];
 
@@ -45,21 +52,28 @@ const authHelper = (...roles: string[]) => {
                 const authHeader = req.headers.authorization;
                 if (authHeader && authHeader.startsWith('Bearer ')) {
                     token = authHeader.substring(7);
+                    console.log("[authHelper] Using Authorization header token");
                 }
+            } else {
+                console.log("[authHelper] Using cookie token");
             }
 
             if (!token) {
+                console.log("[authHelper] ❌ No token found");
                 throw new ApiError(httpStatus.UNAUTHORIZED, "unauthorized access denied")
             }
 
             const verifyUser = await jwtHelper.verifyToken(token, config.ACCESS_TOKEN_SECRET)
             req.user = verifyUser
+            console.log("[authHelper] ✅ Token verified, userId:", verifyUser.userId, "role:", verifyUser.role);
 
             if (roles.length && !roles.includes(verifyUser.role)) {
+                console.log("[authHelper] ❌ Role mismatch. Required:", roles, "Got:", verifyUser.role);
                 throw new ApiError(httpStatus.UNAUTHORIZED, "unauthorized access denied")
             }
             next()
         } catch (error) {
+            console.error("[authHelper] ❌ Error:", error);
             next(error)
         }
     }

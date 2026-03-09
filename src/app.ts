@@ -17,12 +17,19 @@ const allowedOrigins = [
     "http://localhost:3000"
 ].filter(Boolean);
 
+console.log("=== CORS Configuration ===");
+console.log("[CORS] Allowed origins:", allowedOrigins);
+console.log("[CORS] Environment:", config.node_env);
+
 app.use(
     cors({
         origin: (origin, callback) => {
+            console.log("[CORS] Request from origin:", origin);
             if (!origin || allowedOrigins.includes(origin)) {
+                console.log("[CORS] ✅ Origin allowed");
                 callback(null, true);
             } else {
+                console.log("[CORS] ❌ Origin blocked");
                 callback(new Error("Not allowed by CORS"));
             }
         },
