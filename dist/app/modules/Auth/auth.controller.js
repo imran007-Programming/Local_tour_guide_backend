@@ -21,13 +21,13 @@ const createUser = (0, catchAsync_1.catchAsync)(async (req, res) => {
 const login = (0, catchAsync_1.catchAsync)(async (req, res) => {
     const result = await auth_service_1.authService.login(req.body);
     const { accessToken, refreshToken } = result;
-    res.cookie("accessToken", accessToken, {
-        httpOnly: true,
-        secure: config_1.default.node_env === "production",
-        sameSite: config_1.default.node_env === "production" ? "none" : "lax",
-        maxAge: 10 * 1000, // 10 seconds for testing
-        path: "/",
-    });
+    // res.cookie("accessToken", accessToken, {
+    //     httpOnly: true,
+    //     secure: config.node_env === "production",
+    //     sameSite: config.node_env === "production" ? "none" : "lax",
+    //     maxAge: 15 * 60 * 1000,
+    //     path: "/",
+    // });
     res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
         secure: config_1.default.node_env === "production",

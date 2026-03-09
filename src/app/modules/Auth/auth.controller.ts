@@ -22,14 +22,14 @@ const login = catchAsync(async (req: Request, res: Response) => {
 
     const result = await authService.login(req.body)
     const { accessToken, refreshToken } = result;
-    
-    res.cookie("accessToken", accessToken, {
-        httpOnly: true,
-        secure: config.node_env === "production",
-        sameSite: config.node_env === "production" ? "none" : "lax",
-        maxAge: 10 * 1000, // 10 seconds for testing
-        path: "/",
-    });
+
+    // res.cookie("accessToken", accessToken, {
+    //     httpOnly: true,
+    //     secure: config.node_env === "production",
+    //     sameSite: config.node_env === "production" ? "none" : "lax",
+    //     maxAge: 15 * 60 * 1000,
+    //     path: "/",
+    // });
 
     res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
