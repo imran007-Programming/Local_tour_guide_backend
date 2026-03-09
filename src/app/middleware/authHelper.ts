@@ -23,7 +23,7 @@ const authHelper = (...roles: string[]) => {
                         const newAccessToken = jwtHelper.genarateToken(
                             { userId: verifyRefresh.userId, role: verifyRefresh.role },
                             config.ACCESS_TOKEN_SECRET,
-                            config.ACCESS_TOKEN_EXPIRE!
+                            config.ACCESS_TOKEN_EXPIRE as string
                         );
 
                         // Set new access token in cookie
