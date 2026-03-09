@@ -8,6 +8,7 @@ const http_status_1 = __importDefault(require("http-status"));
 const client_1 = require("@prisma/client");
 const ApiError_1 = __importDefault(require("../../error/ApiError"));
 const prisma_1 = require("../../lib/prisma");
+const notification_service_1 = require("../notification/notification.service");
 const createReview = async (user, payload) => {
     const { bookingId, rating, comment } = payload;
     if (user.role !== client_1.Role.TOURIST) {
@@ -21,6 +22,10 @@ const createReview = async (user, payload) => {
     const booking = await prisma_1.prisma.booking.findUnique({
         where: {
             id: bookingId
+        },
+        include: {
+            guide: { include: { user: true } },
+            tour: true
         }
     });
     if (!booking || booking.touristId !== tourist?.id) {
@@ -33,7 +38,7 @@ const createReview = async (user, payload) => {
         where: { bookingId: booking?.id }
     });
     try {
-        return await prisma_1.prisma.review.create({
+        const review = await prisma_1.prisma.review.create({
             data: {
                 bookingId: booking.id,
                 touristId: tourist.id,
@@ -42,6 +47,15 @@ const createReview = async (user, payload) => {
                 rating: rating
             }
         });
+        // Notify guide about new review
+        await notification_service_1.notificationService.createNotification({
+            userId: booking.guide.userId,
+            type: "REVIEW",
+            title: "New Review Received",
+            message: `You received a ${rating}-star review for "${booking.tour.title}"`,
+            metadata: { bookingId: booking.id, rating }
+        });
+        return review;
     }
     catch (error) {
         if (error.code === "P2002") {

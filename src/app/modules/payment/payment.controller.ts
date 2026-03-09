@@ -1,4 +1,3 @@
-
 import { Request, Response } from "express";
 import httpStatus from "http-status";
 import { catchAsync } from "../../shared/catchAsync";
@@ -9,6 +8,7 @@ import { stripe } from "../../lib/stripe";
 import config from "../../config";
 import { prisma } from "../../lib/prisma";
 import { PaymentStatus } from "@prisma/client";
+import { notificationService } from "../notification/notification.service";
 
 
 const createStripeIntent = catchAsync(async (req: Request, res: Response) => {
@@ -62,7 +62,7 @@ const createCheckoutSession = async (req: Request, res: Response) => {
             },
         ],
         success_url: successUrl,
-        cancel_url: cancelUrl,
+        cancel_url: `${cancelUrl}?session_id={CHECKOUT_SESSION_ID}`,
         metadata: {
             bookingId: booking.id,
             transactionId: payment.transactionId
@@ -84,6 +84,32 @@ const createCheckoutSession = async (req: Request, res: Response) => {
 
     res.json({ url: session.url });
 };
+
+const handlePaymentCancel = catchAsync(async (req: Request, res: Response) => {
+    const { sessionId } = req.body;
+
+    if (!sessionId) {
+        throw new ApiError(400, "Session ID required");
+    }
+
+    const payment = await prisma.payment.findFirst({
+        where: { paymentIntentId: sessionId }
+    });
+
+    if (payment) {
+        await prisma.payment.update({
+            where: { id: payment.id },
+            data: { status: PaymentStatus.FAILED }
+        });
+    }
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "Payment marked as cancelled",
+        data: null
+    });
+});
 
 /* Stripe webhook */
 export const handleStripeWebhook = async (req: Request, res: Response) => {
@@ -114,6 +140,15 @@ export const handleStripeWebhook = async (req: Request, res: Response) => {
 
         const bookingId = session.metadata.bookingId;
 
+        const booking = await prisma.booking.findUnique({
+            where: { id: bookingId },
+            include: {
+                tourist: { include: { user: true } },
+                guide: { include: { user: true } },
+                tour: true
+            }
+        });
+
         await prisma.payment.update({
             where: { bookingId },
             data: {
@@ -127,6 +162,26 @@ export const handleStripeWebhook = async (req: Request, res: Response) => {
             where: { id: bookingId },
             data: { status: "CONFIRMED" as any }
         });
+
+        if (booking) {
+            // Notify tourist
+            await notificationService.createNotification({
+                userId: booking.tourist.userId,
+                type: "PAYMENT",
+                title: "Payment Successful",
+                message: `Payment confirmed for "${booking.tour.title}"`,
+                metadata: { bookingId, amount: session.amount_total / 100 }
+            });
+
+            // Notify guide
+            await notificationService.createNotification({
+                userId: booking.guide.userId,
+                type: "PAYMENT",
+                title: "Payment Received",
+                message: `Payment of $${session.amount_total / 100} received for "${booking.tour.title}"`,
+                metadata: { bookingId, amount: session.amount_total / 100 }
+            });
+        }
     }
 
     if (event.type === "checkout.session.expired") {
@@ -143,14 +198,14 @@ export const handleStripeWebhook = async (req: Request, res: Response) => {
     }
 
     if (event.type === "payment_intent.payment_failed") {
-        const paymentIntent = event.data.object.payment_details?.order_reference as any;
+        const paymentIntent = event.data.object as any;
 
-        await prisma.payment.updateMany({
-            where: { paymentIntentId: paymentIntent.id },
-            data: {
-                status: PaymentStatus.FAILED
-            },
-        });
+        if (paymentIntent?.id) {
+            await prisma.payment.update({
+                where: { paymentIntentId: paymentIntent.id },
+                data: { status: PaymentStatus.FAILED },
+            });
+        }
     }
 
 
@@ -161,5 +216,6 @@ export const handleStripeWebhook = async (req: Request, res: Response) => {
 export const paymentController = {
     createStripeIntent,
     createCheckoutSession,
-    handleStripeWebhook
+    handleStripeWebhook,
+    handlePaymentCancel
 };

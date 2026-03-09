@@ -22,18 +22,19 @@ const login = catchAsync(async (req: Request, res: Response) => {
 
     const result = await authService.login(req.body)
     const { accessToken, refreshToken } = result;
-    // res.cookie("accessToken", accessToken, {
-    //     httpOnly: true,
-    //     secure: true,
-    //     sameSite: "none" as const,
-    //     maxAge: 15 * 60 * 1000,
-    //     path: "/",
-    // });
+    
+    res.cookie("accessToken", accessToken, {
+        httpOnly: true,
+        secure: config.node_env === "production",
+        sameSite: config.node_env === "production" ? "none" : "lax",
+        maxAge: 10 * 1000, // 10 seconds for testing
+        path: "/",
+    });
 
     res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
-        secure: true,
-        sameSite: "none" as const,
+        secure: config.node_env === "production",
+        sameSite: config.node_env === "production" ? "none" : "lax",
         maxAge: 90 * 24 * 60 * 60 * 1000,
         path: "/",
     });
@@ -71,7 +72,8 @@ const logout = catchAsync(async (req: Request, res: Response) => {
 // Genarate Refresh Token
 const getRefreshToken = catchAsync(async (req: Request, res: Response) => {
     try {
-        const refreshToken = req.cookies["refreshToken"];
+        // Check cookies first, then body
+        const refreshToken = req.cookies.refreshToken || req.body.refreshToken;
 
         if (!refreshToken) {
             return res.status(401).json({
@@ -85,27 +87,30 @@ const getRefreshToken = catchAsync(async (req: Request, res: Response) => {
             config.REFRESH_TOKEN_SECRET
         ) as JwtPayload;
 
-        const newAccessToken = jwt.sign(
+        const accessToken = jwt.sign(
             {
                 userId: decoded.userId,
                 role: decoded.role,
             },
             config.ACCESS_TOKEN_SECRET,
-            { expiresIn: "15m" }
+            { expiresIn: config.ACCESS_TOKEN_EXPIRE } as SignOptions
         );
 
-        res.cookie("accessToken", newAccessToken, {
+        // Set new access token in cookie
+        res.cookie("accessToken", accessToken, {
             httpOnly: true,
-            secure: true,
-            sameSite: "none" as const,
-            maxAge: 15 * 60 * 1000,
+            secure: config.node_env === "production",
+            sameSite: config.node_env === "production" ? "none" : "lax",
+            maxAge: 10 * 1000, // 10 seconds for testing
             path: "/",
         });
 
-        return res.status(200).json({
+        sendResponse(res, {
+            statusCode: 201,
             success: true,
-            message: "Token refreshed",
-        });
+            message: "accessToken get successfully",
+            data: accessToken
+        })
 
     } catch {
         return res.status(401).json({

@@ -21,17 +21,17 @@ const createUser = (0, catchAsync_1.catchAsync)(async (req, res) => {
 const login = (0, catchAsync_1.catchAsync)(async (req, res) => {
     const result = await auth_service_1.authService.login(req.body);
     const { accessToken, refreshToken } = result;
-    // res.cookie("accessToken", accessToken, {
-    //     httpOnly: true,
-    //     secure: true,
-    //     sameSite: "none" as const,
-    //     maxAge: 15 * 60 * 1000,
-    //     path: "/",
-    // });
+    res.cookie("accessToken", accessToken, {
+        httpOnly: true,
+        secure: config_1.default.node_env === "production",
+        sameSite: config_1.default.node_env === "production" ? "none" : "lax",
+        maxAge: 10 * 1000, // 10 seconds for testing
+        path: "/",
+    });
     res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
-        secure: true,
-        sameSite: "none",
+        secure: config_1.default.node_env === "production",
+        sameSite: config_1.default.node_env === "production" ? "none" : "lax",
         maxAge: 90 * 24 * 60 * 60 * 1000,
         path: "/",
     });
@@ -63,7 +63,8 @@ const logout = (0, catchAsync_1.catchAsync)(async (req, res) => {
 // Genarate Refresh Token
 const getRefreshToken = (0, catchAsync_1.catchAsync)(async (req, res) => {
     try {
-        const refreshToken = req.cookies["refreshToken"];
+        // Check cookies first, then body
+        const refreshToken = req.cookies.refreshToken || req.body.refreshToken;
         if (!refreshToken) {
             return res.status(401).json({
                 success: false,
@@ -71,20 +72,23 @@ const getRefreshToken = (0, catchAsync_1.catchAsync)(async (req, res) => {
             });
         }
         const decoded = jsonwebtoken_1.default.verify(refreshToken, config_1.default.REFRESH_TOKEN_SECRET);
-        const newAccessToken = jsonwebtoken_1.default.sign({
+        const accessToken = jsonwebtoken_1.default.sign({
             userId: decoded.userId,
             role: decoded.role,
-        }, config_1.default.ACCESS_TOKEN_SECRET, { expiresIn: "15m" });
-        res.cookie("accessToken", newAccessToken, {
+        }, config_1.default.ACCESS_TOKEN_SECRET, { expiresIn: config_1.default.ACCESS_TOKEN_EXPIRE });
+        // Set new access token in cookie
+        res.cookie("accessToken", accessToken, {
             httpOnly: true,
-            secure: true,
-            sameSite: "none",
-            maxAge: 15 * 60 * 1000,
+            secure: config_1.default.node_env === "production",
+            sameSite: config_1.default.node_env === "production" ? "none" : "lax",
+            maxAge: 10 * 1000, // 10 seconds for testing
             path: "/",
         });
-        return res.status(200).json({
+        (0, sendResponse_1.default)(res, {
+            statusCode: 201,
             success: true,
-            message: "Token refreshed",
+            message: "accessToken get successfully",
+            data: accessToken
         });
     }
     catch {

@@ -7,6 +7,7 @@ import ApiError from "../../error/ApiError"
 import { prisma } from '../../lib/prisma';
 import { Ioptions, paginationHelper } from '../../helper/paginationHelper';
 import { bookingSearchableFields } from './booking.contant';
+import { notificationService } from '../notification/notification.service';
 
 const createBooking = async (
     user: IUser,
@@ -51,7 +52,7 @@ const createBooking = async (
         }
 
         try {
-            return await tx.booking.create({
+            const booking = await tx.booking.create({
                 data: {
                     touristId: tourist.id,
                     guideId: tour.guideId,
@@ -60,7 +61,23 @@ const createBooking = async (
                     message: payload.message,
                     status: "PENDING",
                 },
+                include: {
+                    tourist: { include: { user: true } },
+                    tour: true,
+                    guide: { include: { user: true } }
+                }
             });
+
+            // Notify guide about new booking
+            await notificationService.createNotification({
+                userId: booking.guide.userId,
+                type: "BOOKING",
+                title: "New Booking Request",
+                message: `${booking.tourist.user.name} has requested to book "${booking.tour.title}"`,
+                metadata: { bookingId: booking.id, tourId: booking.tourId }
+            });
+
+            return booking;
         } catch (error: any) {
             //  Catch unique constraint
             if (error.code === "P2002") {
@@ -134,7 +151,9 @@ const getMyBooking = async (user: IUser, options: Ioptions, filters: any) => {
                 include: {
                     user: true
                 }
-            }, reviews: true, payment: true
+            }, 
+            reviews: true, 
+            payment: true
         },
         skip,
         take: limit,
@@ -228,8 +247,6 @@ const getAssignedBooking = async (options: Ioptions, filters: any, req: Request,
         orderBy: {
             [sortBy]: sortOrder,
         },
-
-
         include: {
             tour: true,
             payment: true,
@@ -240,7 +257,6 @@ const getAssignedBooking = async (options: Ioptions, filters: any, req: Request,
             },
             reviews: true
         },
-
     })
     const total = await prisma.booking.count({
         where: {
@@ -273,6 +289,10 @@ const cancelBooking = async (user: IUser, payload: any, bookingId: string) => {
     const booking = await prisma.booking.findUnique({
         where: {
             id: bookingId
+        },
+        include: {
+            guide: { include: { user: true } },
+            tour: true
         }
     })
 
@@ -280,7 +300,7 @@ const cancelBooking = async (user: IUser, payload: any, bookingId: string) => {
         throw new ApiError(httpStatus.NOT_FOUND, "booking not found")
     }
 
-    return await prisma.booking.update({
+    const result = await prisma.booking.update({
         where: {
             id: bookingId
         }, data: {
@@ -288,6 +308,17 @@ const cancelBooking = async (user: IUser, payload: any, bookingId: string) => {
             cancelReason: payload.cancelReason
         }
     })
+
+    // Notify guide about cancellation
+    await notificationService.createNotification({
+        userId: booking.guide.userId,
+        type: "CANCELLATION",
+        title: "Booking Cancelled",
+        message: `Booking for "${booking.tour.title}" has been cancelled`,
+        metadata: { bookingId: booking.id }
+    });
+
+    return result;
 
 
 
@@ -365,6 +396,10 @@ const updateBookingStatus = async (user: IUser, bookingId: any, payload: any) =>
     const booking = await prisma.booking.findUnique({
         where: {
             id: bookingId
+        },
+        include: {
+            tourist: { include: { user: true } },
+            tour: true
         }
     })
 
@@ -383,13 +418,24 @@ const updateBookingStatus = async (user: IUser, bookingId: any, payload: any) =>
     }
 
 
-    return await prisma.booking.update({
+    const result = await prisma.booking.update({
         where: {
             id: booking.id
         }, data: {
             status: payload.status
         }
     })
+
+    // Notify tourist about status change
+    await notificationService.createNotification({
+        userId: booking.tourist.userId,
+        type: payload.status === BookingStatus.CANCELLED ? "CANCELLATION" : "BOOKING",
+        title: payload.status === BookingStatus.CANCELLED ? "Booking Cancelled" : "Booking Updated",
+        message: `Your booking for "${booking.tour.title}" has been ${payload.status.toLowerCase()}`,
+        metadata: { bookingId: booking.id }
+    });
+
+    return result;
 
 }
 

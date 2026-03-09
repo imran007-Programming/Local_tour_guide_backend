@@ -1,27 +1,27 @@
 model Tour {
-    id           String     @id @default(uuid())
-    title        String
-    slug         String     @unique @default("")
-    description  String
-    itinerary    String
-    price        Float
-    duration     Int
-    meetingPoint String
-    maxGroupSize Int
-    images       String[]
-    city         String
-    languages    String[]
+  id           String   @id @default(uuid())
+  title        String
+  slug         String   @unique @default("")
+  description  String
+  itinerary    String
+  price        Float
+  duration     Int
+  meetingPoint String
+  maxGroupSize Int
+  images       String[]
+  city         String
+  languages    String[]
 
-    category String
-    isActive Boolean @default(true)
+  category String
+  isActive Boolean @default(true)
 
-    guideId String
-    guide   Guide  @relation(fields: [guideId], references: [id])
+  guideId String
+  guide   Guide  @relation(fields: [guideId], references: [id])
 
-    createdAt DateTime    @default(now())
-    updatedAt DateTime    @updatedAt
-    bookings  Booking[]
-    wishlist  Wishlist[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  bookings  Booking[]
+  wishlist  Wishlist[]
 
-    @@map("tours")
+  @@map("tours")
 }

@@ -22,6 +22,12 @@ router.post(
     paymentController.handleStripeWebhook
 );
 
+router.post(
+    "/cancel",
+    authHelper(Role.TOURIST),
+    paymentController.handlePaymentCancel
+);
+
 
 
 export const paymentRoutes = router

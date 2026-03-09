@@ -9,6 +9,7 @@ const client_1 = require("@prisma/client");
 const ApiError_1 = __importDefault(require("../../error/ApiError"));
 const prisma_1 = require("../../lib/prisma");
 const paginationHelper_1 = require("../../helper/paginationHelper");
+const notification_service_1 = require("../notification/notification.service");
 const createBooking = async (user, payload) => {
     return await prisma_1.prisma.$transaction(async (tx) => {
         const tour = await tx.tour.findUnique({
@@ -38,7 +39,7 @@ const createBooking = async (user, payload) => {
             throw new ApiError_1.default(400, "This time slot is fully booked");
         }
         try {
-            return await tx.booking.create({
+            const booking = await tx.booking.create({
                 data: {
                     touristId: tourist.id,
                     guideId: tour.guideId,
@@ -47,7 +48,21 @@ const createBooking = async (user, payload) => {
                     message: payload.message,
                     status: "PENDING",
                 },
+                include: {
+                    tourist: { include: { user: true } },
+                    tour: true,
+                    guide: { include: { user: true } }
+                }
             });
+            // Notify guide about new booking
+            await notification_service_1.notificationService.createNotification({
+                userId: booking.guide.userId,
+                type: "BOOKING",
+                title: "New Booking Request",
+                message: `${booking.tourist.user.name} has requested to book "${booking.tour.title}"`,
+                metadata: { bookingId: booking.id, tourId: booking.tourId }
+            });
+            return booking;
         }
         catch (error) {
             //  Catch unique constraint
@@ -114,7 +129,9 @@ const getMyBooking = async (user, options, filters) => {
                 include: {
                     user: true
                 }
-            }, reviews: true, payment: true
+            },
+            reviews: true,
+            payment: true
         },
         skip,
         take: limit,
@@ -232,12 +249,16 @@ const cancelBooking = async (user, payload, bookingId) => {
     const booking = await prisma_1.prisma.booking.findUnique({
         where: {
             id: bookingId
+        },
+        include: {
+            guide: { include: { user: true } },
+            tour: true
         }
     });
     if (!booking || booking.touristId !== tourist?.id) {
         throw new ApiError_1.default(http_status_1.default.NOT_FOUND, "booking not found");
     }
-    return await prisma_1.prisma.booking.update({
+    const result = await prisma_1.prisma.booking.update({
         where: {
             id: bookingId
         }, data: {
@@ -245,6 +266,15 @@ const cancelBooking = async (user, payload, bookingId) => {
             cancelReason: payload.cancelReason
         }
     });
+    // Notify guide about cancellation
+    await notification_service_1.notificationService.createNotification({
+        userId: booking.guide.userId,
+        type: "CANCELLATION",
+        title: "Booking Cancelled",
+        message: `Booking for "${booking.tour.title}" has been cancelled`,
+        metadata: { bookingId: booking.id }
+    });
+    return result;
 };
 // update the status---> (complete by guide)
 const completedBooking = async (user, bookingId) => {
@@ -301,6 +331,10 @@ const updateBookingStatus = async (user, bookingId, payload) => {
     const booking = await prisma_1.prisma.booking.findUnique({
         where: {
             id: bookingId
+        },
+        include: {
+            tourist: { include: { user: true } },
+            tour: true
         }
     });
     if (!booking || booking.guideId !== guide.id) {
@@ -315,13 +349,22 @@ const updateBookingStatus = async (user, bookingId, payload) => {
     if (booking.status !== client_1.BookingStatus.CONFIRMED && booking.status !== client_1.BookingStatus.PENDING) {
         throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, "Only pending or confirmed bookings can be updated");
     }
-    return await prisma_1.prisma.booking.update({
+    const result = await prisma_1.prisma.booking.update({
         where: {
             id: booking.id
         }, data: {
             status: payload.status
         }
     });
+    // Notify tourist about status change
+    await notification_service_1.notificationService.createNotification({
+        userId: booking.tourist.userId,
+        type: payload.status === client_1.BookingStatus.CANCELLED ? "CANCELLATION" : "BOOKING",
+        title: payload.status === client_1.BookingStatus.CANCELLED ? "Booking Cancelled" : "Booking Updated",
+        message: `Your booking for "${booking.tour.title}" has been ${payload.status.toLowerCase()}`,
+        metadata: { bookingId: booking.id }
+    });
+    return result;
 };
 const getAdminStats = async () => {
     const totalBookings = await prisma_1.prisma.booking.count();

@@ -4,6 +4,7 @@ import { prisma } from "../../lib/prisma";
 import { stripe } from "../../lib/stripe";
 import { BookingStatus, PaymentStatus, Role } from "@prisma/client";
 import { IUser } from "../../../types/user.interface";
+import { notificationService } from "../notification/notification.service";
 
 
 const createStripeIntent = async (

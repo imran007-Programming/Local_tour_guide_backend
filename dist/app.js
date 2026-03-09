@@ -24,7 +24,7 @@ app.use((0, cookie_parser_1.default)());
 app.use("/api", routes_1.default);
 // Use JSON parser for all non-webhook routes
 app.use((req, res, next) => {
-    if (req.originalUrl === "api/payments/stripe/webhook") {
+    if (req.originalUrl === "/api/payments/stripe/webhook") {
         next();
     }
     else {

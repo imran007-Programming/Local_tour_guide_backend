@@ -3,6 +3,7 @@ import { BookingStatus, Role } from "@prisma/client"
 import { IUser } from "../../../types/user.interface"
 import ApiError from "../../error/ApiError"
 import { prisma } from '../../lib/prisma';
+import { notificationService } from '../notification/notification.service';
 
 const createReview = async (user: IUser, payload: any) => {
     const { bookingId, rating, comment } = payload;
@@ -20,6 +21,10 @@ const createReview = async (user: IUser, payload: any) => {
     const booking = await prisma.booking.findUnique({
         where: {
             id: bookingId
+        },
+        include: {
+            guide: { include: { user: true } },
+            tour: true
         }
     })
     if (!booking || booking.touristId !== tourist?.id) {
@@ -35,7 +40,7 @@ const createReview = async (user: IUser, payload: any) => {
     });
 
     try {
-        return await prisma.review.create({
+        const review = await prisma.review.create({
             data: {
                 bookingId: booking.id,
                 touristId: tourist.id,
@@ -44,6 +49,17 @@ const createReview = async (user: IUser, payload: any) => {
                 rating: rating
             }
         })
+
+        // Notify guide about new review
+        await notificationService.createNotification({
+            userId: booking.guide.userId,
+            type: "REVIEW",
+            title: "New Review Received",
+            message: `You received a ${rating}-star review for "${booking.tour.title}"`,
+            metadata: { bookingId: booking.id, rating }
+        });
+
+        return review;
     } catch (error: any) {
         if (error.code === "P2002") {
             throw new ApiError(

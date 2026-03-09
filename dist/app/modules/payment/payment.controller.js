@@ -13,6 +13,7 @@ const stripe_1 = require("../../lib/stripe");
 const config_1 = __importDefault(require("../../config"));
 const prisma_1 = require("../../lib/prisma");
 const client_1 = require("@prisma/client");
+const notification_service_1 = require("../notification/notification.service");
 const createStripeIntent = (0, catchAsync_1.catchAsync)(async (req, res) => {
     const result = await payment_service_1.paymentService.createStripeIntent(req.user, req.body.bookingId);
     (0, sendResponse_1.default)(res, {
@@ -53,7 +54,7 @@ const createCheckoutSession = async (req, res) => {
             },
         ],
         success_url: successUrl,
-        cancel_url: cancelUrl,
+        cancel_url: `${cancelUrl}?session_id={CHECKOUT_SESSION_ID}`,
         metadata: {
             bookingId: booking.id,
             transactionId: payment.transactionId
@@ -73,6 +74,27 @@ const createCheckoutSession = async (req, res) => {
     });
     res.json({ url: session.url });
 };
+const handlePaymentCancel = (0, catchAsync_1.catchAsync)(async (req, res) => {
+    const { sessionId } = req.body;
+    if (!sessionId) {
+        throw new ApiError_1.default(400, "Session ID required");
+    }
+    const payment = await prisma_1.prisma.payment.findFirst({
+        where: { paymentIntentId: sessionId }
+    });
+    if (payment) {
+        await prisma_1.prisma.payment.update({
+            where: { id: payment.id },
+            data: { status: client_1.PaymentStatus.FAILED }
+        });
+    }
+    (0, sendResponse_1.default)(res, {
+        statusCode: http_status_1.default.OK,
+        success: true,
+        message: "Payment marked as cancelled",
+        data: null
+    });
+});
 /* Stripe webhook */
 const handleStripeWebhook = async (req, res) => {
     const sig = req.headers["stripe-signature"];
@@ -90,6 +112,14 @@ const handleStripeWebhook = async (req, res) => {
     if (event.type === "checkout.session.completed") {
         const session = event.data.object;
         const bookingId = session.metadata.bookingId;
+        const booking = await prisma_1.prisma.booking.findUnique({
+            where: { id: bookingId },
+            include: {
+                tourist: { include: { user: true } },
+                guide: { include: { user: true } },
+                tour: true
+            }
+        });
         await prisma_1.prisma.payment.update({
             where: { bookingId },
             data: {
@@ -102,6 +132,24 @@ const handleStripeWebhook = async (req, res) => {
             where: { id: bookingId },
             data: { status: "CONFIRMED" }
         });
+        if (booking) {
+            // Notify tourist
+            await notification_service_1.notificationService.createNotification({
+                userId: booking.tourist.userId,
+                type: "PAYMENT",
+                title: "Payment Successful",
+                message: `Payment confirmed for "${booking.tour.title}"`,
+                metadata: { bookingId, amount: session.amount_total / 100 }
+            });
+            // Notify guide
+            await notification_service_1.notificationService.createNotification({
+                userId: booking.guide.userId,
+                type: "PAYMENT",
+                title: "Payment Received",
+                message: `Payment of $${session.amount_total / 100} received for "${booking.tour.title}"`,
+                metadata: { bookingId, amount: session.amount_total / 100 }
+            });
+        }
     }
     if (event.type === "checkout.session.expired") {
         const session = event.data.object;
@@ -114,13 +162,13 @@ const handleStripeWebhook = async (req, res) => {
         });
     }
     if (event.type === "payment_intent.payment_failed") {
-        const paymentIntent = event.data.object.payment_details?.order_reference;
-        await prisma_1.prisma.payment.updateMany({
-            where: { paymentIntentId: paymentIntent.id },
-            data: {
-                status: client_1.PaymentStatus.FAILED
-            },
-        });
+        const paymentIntent = event.data.object;
+        if (paymentIntent?.id) {
+            await prisma_1.prisma.payment.update({
+                where: { paymentIntentId: paymentIntent.id },
+                data: { status: client_1.PaymentStatus.FAILED },
+            });
+        }
     }
     res.json({ received: true });
 };
@@ -128,5 +176,6 @@ exports.handleStripeWebhook = handleStripeWebhook;
 exports.paymentController = {
     createStripeIntent,
     createCheckoutSession,
-    handleStripeWebhook: exports.handleStripeWebhook
+    handleStripeWebhook: exports.handleStripeWebhook,
+    handlePaymentCancel
 };
