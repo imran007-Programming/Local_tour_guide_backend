@@ -93,7 +93,7 @@ const getRefreshToken = catchAsync(async (req: Request, res: Response) => {
                 role: decoded.role,
             },
             config.ACCESS_TOKEN_SECRET,
-            { expiresIn: config.ACCESS_TOKEN_EXPIRE } as SignOptions
+            { expiresIn: config.ACCESS_TOKEN_EXPIRE || "15m" } as SignOptions
         );
 
         // Set new access token in cookie

@@ -75,7 +75,7 @@ const getRefreshToken = (0, catchAsync_1.catchAsync)(async (req, res) => {
         const accessToken = jsonwebtoken_1.default.sign({
             userId: decoded.userId,
             role: decoded.role,
-        }, config_1.default.ACCESS_TOKEN_SECRET, { expiresIn: config_1.default.ACCESS_TOKEN_EXPIRE });
+        }, config_1.default.ACCESS_TOKEN_SECRET, { expiresIn: config_1.default.ACCESS_TOKEN_EXPIRE || "15m" });
         // Set new access token in cookie
         res.cookie("accessToken", accessToken, {
             httpOnly: true,
