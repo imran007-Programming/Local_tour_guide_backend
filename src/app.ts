@@ -9,9 +9,23 @@ import router from "./app/routes";
 import { handleStripeWebhook } from "./app/modules/payment/payment.controller";
 
 const app = express();
+
+const allowedOrigins = [
+    config.FRONTEND_URL,
+    "https://tourguide-five.vercel.app",
+    "https://worldtour-two.vercel.app",
+    "http://localhost:3000"
+].filter(Boolean);
+
 app.use(
     cors({
-        origin: config.FRONTEND_URL,
+        origin: (origin, callback) => {
+            if (!origin || allowedOrigins.includes(origin)) {
+                callback(null, true);
+            } else {
+                callback(new Error("Not allowed by CORS"));
+            }
+        },
         credentials: true,
     })
 );

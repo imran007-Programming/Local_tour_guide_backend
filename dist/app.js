@@ -12,8 +12,21 @@ const NotFound_1 = __importDefault(require("./app/middleware/NotFound"));
 const routes_1 = __importDefault(require("./app/routes"));
 const payment_controller_1 = require("./app/modules/payment/payment.controller");
 const app = (0, express_1.default)();
+const allowedOrigins = [
+    config_1.default.FRONTEND_URL,
+    "https://tourguide-five.vercel.app",
+    "https://worldtour-two.vercel.app",
+    "http://localhost:3000"
+].filter(Boolean);
 app.use((0, cors_1.default)({
-    origin: config_1.default.FRONTEND_URL,
+    origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        }
+        else {
+            callback(new Error("Not allowed by CORS"));
+        }
+    },
     credentials: true,
 }));
 app.post("/payments/stripe/webhook", express_1.default.raw({ type: "application/json" }), payment_controller_1.handleStripeWebhook);

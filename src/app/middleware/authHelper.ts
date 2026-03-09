@@ -29,8 +29,8 @@ const authHelper = (...roles: string[]) => {
                         // Set new access token in cookie
                         res.cookie("accessToken", newAccessToken, {
                             httpOnly: true,
-                            secure: config.node_env === "production",
-                            sameSite: "lax",
+                            secure: true,
+                            sameSite: "none",
                             maxAge: 15 * 60 * 1000
                         });
 

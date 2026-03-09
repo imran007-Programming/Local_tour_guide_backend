@@ -23,15 +23,15 @@ const login = (0, catchAsync_1.catchAsync)(async (req, res) => {
     const { accessToken, refreshToken } = result;
     res.cookie("accessToken", accessToken, {
         httpOnly: true,
-        secure: config_1.default.node_env === "production",
-        sameSite: config_1.default.node_env === "production" ? "none" : "lax",
+        secure: true,
+        sameSite: "none",
         maxAge: 15 * 60 * 1000,
         path: "/",
     });
     res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
-        secure: config_1.default.node_env === "production",
-        sameSite: config_1.default.node_env === "production" ? "none" : "lax",
+        secure: true,
+        sameSite: "none",
         maxAge: 90 * 24 * 60 * 60 * 1000,
         path: "/",
     });
@@ -79,9 +79,9 @@ const getRefreshToken = (0, catchAsync_1.catchAsync)(async (req, res) => {
         // Set new access token in cookie
         res.cookie("accessToken", accessToken, {
             httpOnly: true,
-            secure: config_1.default.node_env === "production",
-            sameSite: config_1.default.node_env === "production" ? "none" : "lax",
-            maxAge: 10 * 1000, // 10 seconds for testing
+            secure: true,
+            sameSite: "none",
+            maxAge: 15 * 60 * 1000, // 15 minutes
             path: "/",
         });
         (0, sendResponse_1.default)(res, {

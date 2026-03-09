@@ -9,9 +9,14 @@ const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const config_1 = __importDefault(require("../config"));
 let io;
 const initSocket = (server) => {
+    const allowedOrigins = [
+        config_1.default.FRONTEND_URL,
+        "https://tourguide-five.vercel.app",
+        "http://localhost:3000"
+    ].filter((origin) => Boolean(origin));
     io = new socket_io_1.Server(server, {
         cors: {
-            origin: config_1.default.FRONTEND_URL || "*",
+            origin: allowedOrigins,
             methods: ["GET", "POST"],
             credentials: true
         }

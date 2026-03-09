@@ -11,9 +11,15 @@ interface AuthenticatedSocket extends Socket {
 let io: SocketIOServer;
 
 export const initSocket = (server: Server) => {
+  const allowedOrigins = [
+    config.FRONTEND_URL,
+    "https://tourguide-five.vercel.app",
+    "http://localhost:3000"
+  ].filter((origin): origin is string => Boolean(origin));
+
   io = new SocketIOServer(server, {
     cors: {
-      origin: config.FRONTEND_URL || "*",
+      origin: allowedOrigins,
       methods: ["GET", "POST"],
       credentials: true
     }
@@ -22,7 +28,7 @@ export const initSocket = (server: Server) => {
   // Authentication middleware
   io.use((socket: any, next) => {
     const token = socket.handshake.auth.token || socket.handshake.headers.cookie?.split('accessToken=')[1]?.split(';')[0];
-    
+
     if (!token) {
       return next();
     }
@@ -79,7 +85,7 @@ export const emitNewMessage = (message: any) => {
   if (io) {
     // Emit to conversation room
     io.to(message.conversationId).emit("new-message", message);
-    
+
     // Emit directly to receiver's user room for instant delivery
     if (message.receiverId) {
       io.to(message.receiverId).emit("new-message", message);
