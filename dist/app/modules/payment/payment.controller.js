@@ -149,6 +149,12 @@ const handleStripeWebhook = async (req, res) => {
                 message: `Payment of $${session.amount_total / 100} received for "${booking.tour.title}"`,
                 metadata: { bookingId, amount: session.amount_total / 100 }
             });
+            // Notify admins about payment completion
+            await notification_service_1.notificationService.createAdminNotification('PAYMENT', {
+                amount: session.amount_total / 100,
+                bookingId: bookingId,
+                tourTitle: booking.tour.title
+            });
         }
     }
     if (event.type === "checkout.session.expired") {

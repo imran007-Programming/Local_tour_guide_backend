@@ -19,18 +19,8 @@ const createUser = catchAsync(async (req: Request, res: Response) => {
 
 
 const login = catchAsync(async (req: Request, res: Response) => {
-
-    console.log("=== Login Debug ===");
-    console.log("[login] Request body:", { email: req.body.email });
-    console.log("[login] Origin:", req.headers.origin);
-
     const result = await authService.login(req.body)
     const { accessToken, refreshToken } = result;
-
-    console.log("[login] Tokens generated:", {
-        accessToken: accessToken ? `${accessToken.substring(0, 20)}...` : "missing",
-        refreshToken: refreshToken ? `${refreshToken.substring(0, 20)}...` : "missing"
-    });
 
     res.cookie("accessToken", accessToken, {
         httpOnly: true,
@@ -47,8 +37,6 @@ const login = catchAsync(async (req: Request, res: Response) => {
         maxAge: 90 * 24 * 60 * 60 * 1000,
         path: "/",
     });
-
-    console.log("[login] ✅ Cookies set successfully");
 
     sendResponse(res, {
         statusCode: 201,
@@ -133,15 +121,8 @@ const getRefreshToken = catchAsync(async (req: Request, res: Response) => {
 })
 
 const getMe = catchAsync(async (req: Request & { user?: any }, res: Response) => {
-
-    console.log("=== getMe Debug ===");
-    console.log("[getMe] User from token:", req.user);
-    console.log("[getMe] Origin:", req.headers.origin);
-
     const user = req.user
     const result = await authService.getME(user)
-    
-    console.log("[getMe] ✅ User data retrieved");
     
     sendResponse(res, {
         statusCode: 201,
@@ -149,7 +130,6 @@ const getMe = catchAsync(async (req: Request & { user?: any }, res: Response) =>
         message: "profile Retrived successfully",
         data: result
     })
-
 })
 
 

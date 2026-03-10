@@ -92,3 +92,15 @@ export const emitNewMessage = (message: any) => {
     }
   }
 };
+
+export const emitNewNotification = (userId: string) => {
+  if (io) {
+    io.to(userId).emit("new-notification");
+  }
+};
+
+export const emitNotificationRead = (userId: string) => {
+  if (io) {
+    io.to(userId).emit("notification-read");
+  }
+};

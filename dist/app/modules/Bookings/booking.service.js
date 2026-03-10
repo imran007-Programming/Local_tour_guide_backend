@@ -62,6 +62,12 @@ const createBooking = async (user, payload) => {
                 message: `${booking.tourist.user.name} has requested to book "${booking.tour.title}"`,
                 metadata: { bookingId: booking.id, tourId: booking.tourId }
             });
+            // Notify admins about new booking
+            await notification_service_1.notificationService.createAdminNotification('BOOKING', {
+                userName: booking.tourist.user.name,
+                tourTitle: booking.tour.title,
+                bookingId: booking.id
+            });
             return booking;
         }
         catch (error) {
@@ -363,6 +369,13 @@ const updateBookingStatus = async (user, bookingId, payload) => {
         title: payload.status === client_1.BookingStatus.CANCELLED ? "Booking Cancelled" : "Booking Updated",
         message: `Your booking for "${booking.tour.title}" has been ${payload.status.toLowerCase()}`,
         metadata: { bookingId: booking.id }
+    });
+    // Notify admins about status change
+    await notification_service_1.notificationService.createAdminNotification('GENERAL', {
+        type: 'STATUS_UPDATE',
+        bookingId: booking.id,
+        status: payload.status,
+        tourTitle: booking.tour.title
     });
     return result;
 };

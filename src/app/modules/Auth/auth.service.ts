@@ -8,6 +8,7 @@ import config from '../../config';
 import { Role, User } from '@prisma/client';
 import { Request } from 'express';
 import { JwtPayload } from 'jsonwebtoken';
+import { notificationService } from '../notification/notification.service';
 interface MulterRequest extends Request {
     file?: Express.Multer.File;
 }
@@ -60,6 +61,14 @@ const createUser = async (req: Request) => {
             }
             return user;
         })
+
+        // Notify admins about new user registration
+        await notificationService.createAdminNotification('GENERAL', {
+            type: 'USER_REGISTERED',
+            role: result.role,
+            name: result.name,
+            email: result.email
+        });
 
         return result
     } catch (error: any) {

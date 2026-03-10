@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.emitNewMessage = exports.getIO = exports.initSocket = void 0;
+exports.emitNotificationRead = exports.emitNewNotification = exports.emitNewMessage = exports.getIO = exports.initSocket = void 0;
 const socket_io_1 = require("socket.io");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const config_1 = __importDefault(require("../config"));
@@ -80,3 +80,15 @@ const emitNewMessage = (message) => {
     }
 };
 exports.emitNewMessage = emitNewMessage;
+const emitNewNotification = (userId) => {
+    if (io) {
+        io.to(userId).emit("new-notification");
+    }
+};
+exports.emitNewNotification = emitNewNotification;
+const emitNotificationRead = (userId) => {
+    if (io) {
+        io.to(userId).emit("notification-read");
+    }
+};
+exports.emitNotificationRead = emitNotificationRead;

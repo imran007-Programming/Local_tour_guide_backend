@@ -10,6 +10,7 @@ const prisma_1 = require("../../lib/prisma");
 const fileUploader_1 = require("../../helper/fileUploader");
 const paginationHelper_1 = require("../../helper/paginationHelper");
 const tour_constant_1 = require("./tour.constant");
+const notification_service_1 = require("../notification/notification.service");
 const createTour = async (req) => {
     const userId = req.user.userId;
     const payload = req.body;
@@ -33,7 +34,7 @@ const createTour = async (req) => {
         throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, "Only guides can create tours");
     }
     const slug = payload.title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
-    return prisma_1.prisma.tour.create({
+    const tour = await prisma_1.prisma.tour.create({
         data: {
             title: payload.title,
             slug,
@@ -49,7 +50,23 @@ const createTour = async (req) => {
             category: payload.category,
             languages: payload.languages,
         },
+        include: {
+            guide: {
+                include: {
+                    user: true
+                }
+            }
+        }
     });
+    // Notify admins about new tour creation
+    await notification_service_1.notificationService.createAdminNotification('GENERAL', {
+        type: 'TOUR_CREATED',
+        title: tour.title,
+        guideName: tour.guide.user.name,
+        city: tour.city,
+        price: tour.price
+    });
+    return tour;
 };
 const getAllTour = async (options, filters) => {
     const { page, limit, skip, sortBy, sortOrder } = paginationHelper_1.paginationHelper.calculatePagination(options);

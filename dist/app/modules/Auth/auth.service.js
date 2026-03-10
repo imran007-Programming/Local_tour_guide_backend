@@ -12,6 +12,7 @@ const tokenGenarator_1 = require("../../helper/tokenGenarator");
 const fileUploader_1 = require("../../helper/fileUploader");
 const config_1 = __importDefault(require("../../config"));
 const client_1 = require("@prisma/client");
+const notification_service_1 = require("../notification/notification.service");
 const createUser = async (req) => {
     const payload = req.body;
     if (req.file) {
@@ -52,6 +53,13 @@ const createUser = async (req) => {
                 });
             }
             return user;
+        });
+        // Notify admins about new user registration
+        await notification_service_1.notificationService.createAdminNotification('GENERAL', {
+            type: 'USER_REGISTERED',
+            role: result.role,
+            name: result.name,
+            email: result.email
         });
         return result;
     }

@@ -7,6 +7,7 @@ import { fileUploader } from '../../helper/fileUploader';
 import { paginationHelper } from '../../helper/paginationHelper';
 import { Prisma } from '@prisma/client';
 import { tourSearchableFields } from './tour.constant';
+import { notificationService } from '../notification/notification.service';
 
 const createTour = async (req: Request & { user?: any }) => {
     const userId = req.user.userId
@@ -38,7 +39,7 @@ const createTour = async (req: Request & { user?: any }) => {
 
     const slug = payload.title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
 
-    return prisma.tour.create({
+    const tour = await prisma.tour.create({
         data: {
             title: payload.title,
             slug,
@@ -53,13 +54,26 @@ const createTour = async (req: Request & { user?: any }) => {
             itinerary: payload.itinerary,
             category: payload.category,
             languages: payload.languages,
-
-
-
-
-
         },
+        include: {
+            guide: {
+                include: {
+                    user: true
+                }
+            }
+        }
     });
+
+    // Notify admins about new tour creation
+    await notificationService.createAdminNotification('GENERAL', {
+        type: 'TOUR_CREATED',
+        title: tour.title,
+        guideName: tour.guide.user.name,
+        city: tour.city,
+        price: tour.price
+    });
+
+    return tour;
 
 }
 const getAllTour = async (options: any, filters: any) => {

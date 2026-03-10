@@ -77,6 +77,13 @@ const createBooking = async (
                 metadata: { bookingId: booking.id, tourId: booking.tourId }
             });
 
+            // Notify admins about new booking
+            await notificationService.createAdminNotification('BOOKING', {
+                userName: booking.tourist.user.name,
+                tourTitle: booking.tour.title,
+                bookingId: booking.id
+            });
+
             return booking;
         } catch (error: any) {
             //  Catch unique constraint
@@ -433,6 +440,14 @@ const updateBookingStatus = async (user: IUser, bookingId: any, payload: any) =>
         title: payload.status === BookingStatus.CANCELLED ? "Booking Cancelled" : "Booking Updated",
         message: `Your booking for "${booking.tour.title}" has been ${payload.status.toLowerCase()}`,
         metadata: { bookingId: booking.id }
+    });
+
+    // Notify admins about status change
+    await notificationService.createAdminNotification('GENERAL', {
+        type: 'STATUS_UPDATE',
+        bookingId: booking.id,
+        status: payload.status,
+        tourTitle: booking.tour.title
     });
 
     return result;
