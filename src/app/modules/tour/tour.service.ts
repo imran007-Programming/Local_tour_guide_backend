@@ -123,21 +123,38 @@ const getAllTour = async (options: any, filters: any) => {
 
     const whereConditions: Prisma.TourWhereInput = andConditions?.length > 0 ? { AND: andConditions } : {}
 
-
-
     const result = await prisma.tour.findMany({
         where: {
             AND: whereConditions,
             isActive: true
         },
-
         skip,
         take: limit,
         orderBy: {
             [sortBy]: sortOrder
         },
-
     })
+
+    // Get average ratings for each tour
+    const toursWithRatings = await Promise.all(
+        result.map(async (tour) => {
+            const reviews = await prisma.review.findMany({
+                where: { booking: { tourId: tour.id } },
+                select: { rating: true }
+            });
+            
+            const averageRating = reviews.length > 0
+                ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+                : 0;
+            
+            return {
+                ...tour,
+                averageRating: Math.round(averageRating * 10) / 10,
+                reviewCount: reviews.length
+            };
+        })
+    );
+
     const total = await prisma.tour.count({
         where: whereConditions
     })
@@ -146,11 +163,9 @@ const getAllTour = async (options: any, filters: any) => {
             total,
             page,
             limit,
-
         },
-        data: result
+        data: toursWithRatings
     }
-
 }
 const getSingleTour = async (slug: string) => {
     return await prisma.tour.findUnique({
