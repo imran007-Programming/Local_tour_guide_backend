@@ -4,10 +4,10 @@ import { createServer } from "http";
 import app from "./app";
 import config from "./app/config";
 import { initSocket } from "./app/lib/socket";
-import axios from "axios"; // 👈
+import axios from "axios";
 
 let server: Server;
-let keepAliveInterval: ReturnType<typeof setInterval>; // 👈
+let keepAliveInterval: ReturnType<typeof setInterval>;
 
 async function bootstrap() {
     try {
@@ -17,13 +17,13 @@ async function bootstrap() {
         server.listen(config.port, () => {
             console.log(`🚀server is running on http://localhost:${config.port}`);
 
-            // 👇 Start keep-alive ONLY after server is up
+            //  Start keep-alive ONLY after server is up
             keepAliveInterval = setInterval(() => {
                 axios
                     .get("https://local-tour-guide-backend.onrender.com")
                     .then(() => console.log("Keep-alive ping sent"))
                     .catch((err) => console.error(`Keep-alive failed: ${err.message}`));
-            }, 30000);
+            }, 78000);
         });
 
         const exitHandler = (code = 0) => {
