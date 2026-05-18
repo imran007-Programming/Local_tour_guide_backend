@@ -20,7 +20,7 @@ async function bootstrap() {
             //  Start keep-alive ONLY after server is up
             keepAliveInterval = setInterval(() => {
                 axios
-                    .get("https://local-tour-guide-backend.onrender.com")
+                    .get("https://local-tour-guide-backend-1.onrender.com")
                     .then(() => console.log("Keep-alive ping sent"))
                     .catch((err) => console.error(`Keep-alive failed: ${err.message}`));
             }, 78000);
