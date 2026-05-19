@@ -35,9 +35,9 @@ app.use(express_1.default.json());
 app.use(express_1.default.urlencoded({ extended: true }));
 app.use((0, cookie_parser_1.default)());
 // ✅ Health & root — BEFORE router so nothing intercepts them
-app.get("/health", (req, res) => {
-    res.status(200).json({ status: "ok" });
-});
+// app.get("/health", (req: Request, res: Response) => {
+//     res.status(200).json({ status: "ok" });
+// });
 app.get("/", (req, res) => {
     res.status(200).json({
         message: "Server is running..",
