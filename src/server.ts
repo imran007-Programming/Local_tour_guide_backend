@@ -29,7 +29,7 @@ async function bootstrap() {
                     .catch((err) =>
                         console.error(`Keep-alive failed: ${err.message}`)
                     );
-            }, 5000);
+            }, 780000);
         });
 
         const exitHandler = (code = 0) => {

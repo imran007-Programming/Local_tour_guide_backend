@@ -24,7 +24,7 @@ async function bootstrap() {
                 })
                     .then((res) => console.log(`Keep-alive ping sent — status: ${res.status}`))
                     .catch((err) => console.error(`Keep-alive failed: ${err.message}`));
-            }, 5000);
+            }, 780000);
         });
         const exitHandler = (code = 0) => {
             clearInterval(keepAliveInterval);
