@@ -1,6 +1,7 @@
 import express from "express"
 import cors from "cors"
 import cookieParser from "cookie-parser";
+import { Request, Response } from "express";
 
 import config from "./app/config";
 import globalErrorHandler from "./app/middleware/GlobalErrorHandaler";
@@ -16,10 +17,6 @@ const allowedOrigins = [
     "https://worldtour-two.vercel.app",
     "http://localhost:3000"
 ].filter(Boolean);
-
-// console.log("=== CORS Configuration ===");
-// console.log("[CORS] Allowed origins:", allowedOrigins);
-// console.log("[CORS] Environment:", config.node_env);
 
 app.use(
     cors({
@@ -38,16 +35,30 @@ app.post(
     "/payments/stripe/webhook",
     express.raw({ type: "application/json" }),
     handleStripeWebhook
-)
-
+);
 
 // Parser
-app.use(express.json())
+app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser())
+app.use(cookieParser());
+
+// ✅ Health & root — BEFORE router so nothing intercepts them
+app.get("/health", (req: Request, res: Response) => {
+    res.status(200).json({ status: "ok" });
+});
+
+app.get("/", (req: Request, res: Response) => {
+    res.status(200).json({
+        message: "Server is running..",
+        environment: config.node_env,
+        uptime: process.uptime().toFixed(2) + " sec",
+        timeStamp: new Date().toISOString(),
+    });
+});
+
 app.use("/api", router);
 
-// Use JSON parser for all non-webhook routes
+// Webhook duplicate guard (already handled above, safe to keep)
 app.use((req, res, next) => {
     if (req.originalUrl === "/api/payments/stripe/webhook") {
         next();
@@ -56,14 +67,7 @@ app.use((req, res, next) => {
     }
 });
 
-app.get("/", (req, res) => {
-    res.send({
-        message: "Server is running..",
-        environment: config.node_env,
-        uptime: process.uptime().toFixed(2) + " sec",
-        timeStamp: new Date().toISOString(),
-    });
-})
 app.use(globalErrorHandler);
 app.use(notFound);
+
 export default app;

@@ -17,17 +17,23 @@ async function bootstrap() {
         server.listen(config.port, () => {
             console.log(`🚀server is running on http://localhost:${config.port}`);
 
-            //  Start keep-alive ONLY after server is up
+            // ✅ ping /health with validateStatus so 404 never throws
             keepAliveInterval = setInterval(() => {
                 axios
-                    .get("https://local-tour-guide-backend-1.onrender.com")
-                    .then(() => console.log("Keep-alive ping sent"))
-                    .catch((err) => console.error(`Keep-alive failed: ${err.message}`));
-            }, 780000);
+                    .get("https://local-tour-guide-backend-1.onrender.com/health", {
+                        validateStatus: () => true,
+                    })
+                    .then((res) =>
+                        console.log(`Keep-alive ping sent — status: ${res.status}`)
+                    )
+                    .catch((err) =>
+                        console.error(`Keep-alive failed: ${err.message}`)
+                    );
+            }, 5000);
         });
 
         const exitHandler = (code = 0) => {
-            clearInterval(keepAliveInterval); // 👈 clean up before shutdown
+            clearInterval(keepAliveInterval);
             if (server) {
                 server.close(() => {
                     console.log("server closed gracefully");
