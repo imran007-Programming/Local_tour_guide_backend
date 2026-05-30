@@ -14,7 +14,7 @@ const app = express();
 const allowedOrigins = [
     config.FRONTEND_URL,
     "https://tourguide-five.vercel.app",
-    "https://worldtour-two.vercel.app",
+    "https://tourguide.imrandev.xyz",
     "http://localhost:3000"
 ].filter(Boolean);
 
