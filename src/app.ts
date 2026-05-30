@@ -43,9 +43,9 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // ✅ Health & root — BEFORE router so nothing intercepts them
-// app.get("/health", (req: Request, res: Response) => {
-//     res.status(200).json({ status: "ok" });
-// });
+app.get("/health", (req: Request, res: Response) => {
+    res.status(200).json({ status: "ok" });
+});
 
 app.get("/", (req: Request, res: Response) => {
     res.status(200).json({
