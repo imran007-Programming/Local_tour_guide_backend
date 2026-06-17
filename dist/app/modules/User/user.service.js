@@ -102,8 +102,42 @@ const updateUser = async (req) => {
         },
     });
 };
+const removeProfilePic = async (userId) => {
+    const user = await prisma_1.prisma.user.findUnique({ where: { id: userId } });
+    if (user?.profilePic) {
+        await fileUploader_1.fileUploader.deleteFromCloudinary(user.profilePic);
+    }
+    return prisma_1.prisma.user.update({
+        where: { id: userId },
+        data: { profilePic: null },
+        select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+            profilePic: true,
+            bio: true,
+            languages: true,
+            createdAt: true,
+            updatedAt: true,
+        },
+    });
+};
+const deleteAccount = async (userId) => {
+    const user = await prisma_1.prisma.user.findUnique({ where: { id: userId } });
+    if (user?.profilePic) {
+        await fileUploader_1.fileUploader.deleteFromCloudinary(user.profilePic);
+    }
+    // Prisma cascade delete will handle guide/tourist/bookings etc.
+    await prisma_1.prisma.user.delete({
+        where: { id: userId }
+    });
+    return null;
+};
 exports.userService = {
     getAllfromDB,
     getSingleUserfromDB,
-    updateUser
+    updateUser,
+    removeProfilePic,
+    deleteAccount
 };

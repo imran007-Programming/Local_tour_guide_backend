@@ -15,4 +15,10 @@ router.patch("/update-profile",
     fileUploader.upload.single("profilePic"),
     validateRequest(updateUserZodSchema),
     userController.updateUser)
+router.delete("/remove-profile-pic",
+    authHelper(Role.ADMIN, Role.GUIDE, Role.TOURIST),
+    userController.removeProfilePic)
+router.delete("/delete-account",
+    authHelper(Role.ADMIN, Role.GUIDE, Role.TOURIST),
+    userController.deleteAccount)
 export const userRoutes = router

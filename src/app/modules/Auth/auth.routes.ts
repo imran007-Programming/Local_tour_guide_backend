@@ -11,6 +11,7 @@ router.post("/register", fileUploader.upload.single("file"), validateRequest(cre
 router.post("/login", authController.login)
 router.post("/refreshToken", authController.getRefreshToken)
 router.post("/logout", authController.logout)
+router.patch("/change-password", authHelper(Role.ADMIN, Role.GUIDE, Role.TOURIST), authController.changePassword)
 
 
 export const AuthRoutes = router;

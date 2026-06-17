@@ -105,8 +105,27 @@ const getME = async (payload) => {
         }
     });
 };
+const changePassword = async (userId, payload) => {
+    const user = await prisma_1.prisma.user.findUnique({
+        where: { id: userId }
+    });
+    if (!user) {
+        throw new ApiError_1.default(http_status_1.default.NOT_FOUND, "User not found");
+    }
+    const isCorrectPassword = await bcryptjs_1.default.compare(payload.currentPassword, user.password);
+    if (!isCorrectPassword) {
+        throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, "Current password is incorrect");
+    }
+    const hashedPassword = await bcryptjs_1.default.hash(payload.newPassword, Number(config_1.default.salt));
+    await prisma_1.prisma.user.update({
+        where: { id: userId },
+        data: { password: hashedPassword }
+    });
+    return { message: "Password changed successfully" };
+};
 exports.authService = {
     createUser,
     login,
     getME,
+    changePassword,
 };

@@ -132,7 +132,17 @@ const getMe = catchAsync(async (req: Request & { user?: any }, res: Response) =>
     })
 })
 
+const changePassword = catchAsync(async (req: Request & { user?: any }, res: Response) => {
+    const userId = req.user.userId;
+    const result = await authService.changePassword(userId, req.body);
 
+    sendResponse(res, {
+        statusCode: 200,
+        success: true,
+        message: "Password changed successfully",
+        data: result
+    })
+})
 
 
 export const authController = {
@@ -140,6 +150,6 @@ export const authController = {
     login,
     getMe,
     getRefreshToken,
-    logout
-
+    logout,
+    changePassword
 }

@@ -39,8 +39,30 @@ const updateUser = (0, catchAsync_1.catchAsync)(async (req, res) => {
         data: result
     });
 });
+const removeProfilePic = (0, catchAsync_1.catchAsync)(async (req, res) => {
+    const userId = req.user.userId;
+    const result = await user_service_1.userService.removeProfilePic(userId);
+    (0, sendResponse_1.default)(res, {
+        statusCode: 200,
+        success: true,
+        message: "Profile picture removed successfully",
+        data: result
+    });
+});
+const deleteAccount = (0, catchAsync_1.catchAsync)(async (req, res) => {
+    const userId = req.user.userId;
+    await user_service_1.userService.deleteAccount(userId);
+    (0, sendResponse_1.default)(res, {
+        statusCode: 200,
+        success: true,
+        message: "Account deleted successfully",
+        data: null
+    });
+});
 exports.userController = {
     getAllfromDB,
     getSingleUserfromDB,
-    updateUser
+    updateUser,
+    removeProfilePic,
+    deleteAccount
 };

@@ -126,9 +126,52 @@ const updateUser = async (req: Request) => {
 }
 
 
+const removeProfilePic = async (userId: string) => {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+
+    if (user?.profilePic) {
+        await fileUploader.deleteFromCloudinary(user.profilePic);
+    }
+
+    return prisma.user.update({
+        where: { id: userId },
+        data: { profilePic: null },
+        select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+            profilePic: true,
+            bio: true,
+            languages: true,
+            createdAt: true,
+            updatedAt: true,
+        },
+    });
+}
+
+
+const deleteAccount = async (userId: string) => {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+
+    if (user?.profilePic) {
+        await fileUploader.deleteFromCloudinary(user.profilePic);
+    }
+
+    // Prisma cascade delete will handle guide/tourist/bookings etc.
+    await prisma.user.delete({
+        where: { id: userId }
+    });
+
+    return null;
+}
+
+
 export const userService = {
 
     getAllfromDB,
     getSingleUserfromDB,
-    updateUser
+    updateUser,
+    removeProfilePic,
+    deleteAccount
 }

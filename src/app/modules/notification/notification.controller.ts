@@ -44,9 +44,20 @@ const deleteNotification = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const deleteAllNotifications = catchAsync(async (req: Request, res: Response) => {
+  await notificationService.deleteAllNotifications(req.user);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "All notifications deleted",
+    data: null,
+  });
+});
+
 export const notificationController = {
   getUserNotifications,
   markAsRead,
   markAllAsRead,
   deleteNotification,
+  deleteAllNotifications,
 };

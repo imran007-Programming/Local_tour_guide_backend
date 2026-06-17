@@ -43,9 +43,33 @@ const updateUser = catchAsync(async (req: Request, res: Response) => {
 
 })
 
+const removeProfilePic = catchAsync(async (req: Request & { user?: any }, res: Response) => {
+    const userId = req.user.userId;
+    const result = await userService.removeProfilePic(userId);
+    sendResponse(res, {
+        statusCode: 200,
+        success: true,
+        message: "Profile picture removed successfully",
+        data: result
+    })
+})
+
+const deleteAccount = catchAsync(async (req: Request & { user?: any }, res: Response) => {
+    const userId = req.user.userId;
+    await userService.deleteAccount(userId);
+    sendResponse(res, {
+        statusCode: 200,
+        success: true,
+        message: "Account deleted successfully",
+        data: null
+    })
+})
+
 export const userController = {
 
     getAllfromDB,
     getSingleUserfromDB,
-    updateUser
+    updateUser,
+    removeProfilePic,
+    deleteAccount
 }

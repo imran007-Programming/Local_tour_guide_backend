@@ -82,6 +82,11 @@ const deleteNotification = async (user, notificationId) => {
         where: { id: notificationId, userId: user.userId },
     });
 };
+const deleteAllNotifications = async (user) => {
+    return await prisma_1.prisma.notification.deleteMany({
+        where: { userId: user.userId },
+    });
+};
 exports.notificationService = {
     createNotification,
     createAdminNotification,
@@ -89,4 +94,5 @@ exports.notificationService = {
     markAsRead,
     markAllAsRead,
     deleteNotification,
+    deleteAllNotifications,
 };

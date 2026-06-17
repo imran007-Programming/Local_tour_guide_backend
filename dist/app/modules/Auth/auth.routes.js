@@ -17,4 +17,5 @@ router.post("/register", fileUploader_1.fileUploader.upload.single("file"), (0, 
 router.post("/login", auth_controller_1.authController.login);
 router.post("/refreshToken", auth_controller_1.authController.getRefreshToken);
 router.post("/logout", auth_controller_1.authController.logout);
+router.patch("/change-password", (0, authHelper_1.default)(client_1.Role.ADMIN, client_1.Role.GUIDE, client_1.Role.TOURIST), auth_controller_1.authController.changePassword);
 exports.AuthRoutes = router;

@@ -16,7 +16,8 @@ const allowedOrigins = [
     config_1.default.FRONTEND_URL,
     "https://tourguide-five.vercel.app",
     "https://tourguide.imrandev.xyz",
-    "http://localhost:3000"
+    "http://localhost:3000",
+    "http://localhost:3001"
 ].filter(Boolean);
 app.use((0, cors_1.default)({
     origin: (origin, callback) => {

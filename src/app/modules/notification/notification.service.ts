@@ -104,6 +104,12 @@ const deleteNotification = async (user: IUser, notificationId: string) => {
   });
 };
 
+const deleteAllNotifications = async (user: IUser) => {
+  return await prisma.notification.deleteMany({
+    where: { userId: user.userId },
+  });
+};
+
 export const notificationService = {
   createNotification,
   createAdminNotification,
@@ -111,4 +117,5 @@ export const notificationService = {
   markAsRead,
   markAllAsRead,
   deleteNotification,
+  deleteAllNotifications,
 };
