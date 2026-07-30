@@ -16,10 +16,12 @@ router.post(
     paymentController.createCheckoutSession
 );
 
+// Webhook is handled directly in app.ts with express.raw() before json middleware
+
 router.post(
-    "/webhook",
-    express.json({ type: "application/json" }),
-    paymentController.handleStripeWebhook
+    "/verify",
+    authHelper(Role.TOURIST),
+    paymentController.verifyPayment
 );
 
 router.post(

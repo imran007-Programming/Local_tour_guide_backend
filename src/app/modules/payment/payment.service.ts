@@ -7,6 +7,39 @@ import { IUser } from "../../../types/user.interface";
 import { notificationService } from "../notification/notification.service";
 
 
+const verifyAndUpdatePayment = async (bookingId: string) => {
+    const payment = await prisma.payment.findUnique({ where: { bookingId } });
+    if (!payment) throw new ApiError(404, "Payment record not found");
+
+    if (payment.status === PaymentStatus.PAID) {
+        return { alreadyPaid: true };
+    }
+
+    if (!payment.paymentIntentId) throw new ApiError(400, "No payment session found");
+
+    const session = await stripe.checkout.sessions.retrieve(payment.paymentIntentId);
+
+    if (session.payment_status !== "paid") {
+        throw new ApiError(400, "Payment not completed");
+    }
+
+    await prisma.payment.update({
+        where: { bookingId },
+        data: {
+            status: PaymentStatus.PAID,
+            paymentIntentId: session.payment_intent as string,
+            paidAt: new Date()
+        }
+    });
+
+    await prisma.booking.update({
+        where: { id: bookingId },
+        data: { status: BookingStatus.CONFIRMED }
+    });
+
+    return { success: true };
+};
+
 const createStripeIntent = async (
     user: IUser,
     bookingId: string
@@ -29,8 +62,8 @@ const createStripeIntent = async (
         throw new ApiError(404, "Booking not found");
     }
 
-    if (booking.status !== BookingStatus.PENDING) {
-        throw new ApiError(400, "Booking must be in pending status to make payment");
+    if (booking.status === BookingStatus.CANCELLED) {
+        throw new ApiError(400, "Cannot pay for a cancelled booking");
     }
 
     let payment = await prisma.payment.findUnique({
@@ -88,5 +121,6 @@ const createStripeIntent = async (
 
 
 export const paymentService = {
-    createStripeIntent
+    createStripeIntent,
+    verifyAndUpdatePayment
 }
