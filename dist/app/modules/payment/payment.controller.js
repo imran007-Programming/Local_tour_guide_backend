@@ -179,9 +179,22 @@ const handleStripeWebhook = async (req, res) => {
     res.json({ received: true });
 };
 exports.handleStripeWebhook = handleStripeWebhook;
+const verifyPayment = (0, catchAsync_1.catchAsync)(async (req, res) => {
+    const { bookingId } = req.body;
+    if (!bookingId)
+        throw new ApiError_1.default(400, "Booking ID required");
+    const result = await payment_service_1.paymentService.verifyAndUpdatePayment(bookingId);
+    (0, sendResponse_1.default)(res, {
+        statusCode: http_status_1.default.OK,
+        success: true,
+        message: "Payment verified",
+        data: result
+    });
+});
 exports.paymentController = {
     createStripeIntent,
     createCheckoutSession,
     handleStripeWebhook: exports.handleStripeWebhook,
-    handlePaymentCancel
+    handlePaymentCancel,
+    verifyPayment
 };

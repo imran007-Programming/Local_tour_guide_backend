@@ -8,6 +8,33 @@ const ApiError_1 = __importDefault(require("../../error/ApiError"));
 const prisma_1 = require("../../lib/prisma");
 const stripe_1 = require("../../lib/stripe");
 const client_1 = require("@prisma/client");
+const verifyAndUpdatePayment = async (bookingId) => {
+    const payment = await prisma_1.prisma.payment.findUnique({ where: { bookingId } });
+    if (!payment)
+        throw new ApiError_1.default(404, "Payment record not found");
+    if (payment.status === client_1.PaymentStatus.PAID) {
+        return { alreadyPaid: true };
+    }
+    if (!payment.paymentIntentId)
+        throw new ApiError_1.default(400, "No payment session found");
+    const session = await stripe_1.stripe.checkout.sessions.retrieve(payment.paymentIntentId);
+    if (session.payment_status !== "paid") {
+        throw new ApiError_1.default(400, "Payment not completed");
+    }
+    await prisma_1.prisma.payment.update({
+        where: { bookingId },
+        data: {
+            status: client_1.PaymentStatus.PAID,
+            paymentIntentId: session.payment_intent,
+            paidAt: new Date()
+        }
+    });
+    await prisma_1.prisma.booking.update({
+        where: { id: bookingId },
+        data: { status: client_1.BookingStatus.CONFIRMED }
+    });
+    return { success: true };
+};
 const createStripeIntent = async (user, bookingId) => {
     if (user.role !== client_1.Role.TOURIST) {
         throw new ApiError_1.default(403, "Only tourists can pay");
@@ -21,8 +48,8 @@ const createStripeIntent = async (user, bookingId) => {
     if (!booking || booking.touristId !== tourist?.id) {
         throw new ApiError_1.default(404, "Booking not found");
     }
-    if (booking.status !== client_1.BookingStatus.PENDING) {
-        throw new ApiError_1.default(400, "Booking must be in pending status to make payment");
+    if (booking.status === client_1.BookingStatus.CANCELLED) {
+        throw new ApiError_1.default(400, "Cannot pay for a cancelled booking");
     }
     let payment = await prisma_1.prisma.payment.findUnique({
         where: { bookingId }
@@ -68,5 +95,6 @@ const createStripeIntent = async (user, bookingId) => {
     };
 };
 exports.paymentService = {
-    createStripeIntent
+    createStripeIntent,
+    verifyAndUpdatePayment
 };

@@ -30,7 +30,7 @@ app.use((0, cors_1.default)({
     },
     credentials: true,
 }));
-app.post("/payments/stripe/webhook", express_1.default.raw({ type: "application/json" }), payment_controller_1.handleStripeWebhook);
+app.post("/api/payments/stripe/webhook", express_1.default.raw({ type: "application/json" }), payment_controller_1.handleStripeWebhook);
 // Parser
 app.use(express_1.default.json());
 app.use(express_1.default.urlencoded({ extended: true }));
