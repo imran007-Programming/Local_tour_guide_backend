@@ -13,5 +13,3 @@ uploads
 .idea
 *.log
 coverage
-.prisma
-migrations

@@ -15,6 +15,7 @@ const allowedOrigins = [
     config.FRONTEND_URL,
     "https://tourguide-five.vercel.app",
     "https://tourguide.imrandev.xyz",
+    "https://main.d8pstfr4ygtg5.amplifyapp.com",
     "http://localhost:3000",
     "http://localhost:3001"
 ].filter(Boolean);
@@ -29,6 +30,8 @@ app.use(
             }
         },
         credentials: true,
+        allowedHeaders: ["Content-Type", "Authorization"],
+        methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     })
 );
 
