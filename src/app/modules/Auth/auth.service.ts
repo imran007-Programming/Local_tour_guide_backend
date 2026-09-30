@@ -84,7 +84,8 @@ const login = async (payload: any) => {
     const user = await prisma.user.findUniqueOrThrow({
         where: {
             email: payload.email
-        }
+        },
+        omit: { password: false }
     })
     const isCorrectPassword = await bcrypt.compare(payload.password, user.password)
     if (!isCorrectPassword) {
@@ -122,7 +123,8 @@ const getME = async (payload: JwtPayload) => {
 
 const changePassword = async (userId: string, payload: { currentPassword: string; newPassword: string }) => {
     const user = await prisma.user.findUnique({
-        where: { id: userId }
+        where: { id: userId },
+        omit: { password: false }
     });
 
     if (!user) {

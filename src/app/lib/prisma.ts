@@ -4,6 +4,13 @@ import "dotenv/config";
 const connectionString = `${process.env.DATABASE_URL}`
 
 const adapter = new PrismaPg({ connectionString })
-const prisma = new PrismaClient({ adapter })
+// Never return password hashes, including through nested includes.
+// Queries that need it must opt back in with `omit: { password: false }`.
+const prisma = new PrismaClient({
+    adapter,
+    omit: {
+        user: { password: true },
+    },
+})
 
 export { prisma }
