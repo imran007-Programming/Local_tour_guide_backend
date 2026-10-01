@@ -455,28 +455,30 @@ const updateBookingStatus = async (user: IUser, bookingId: any, payload: any) =>
 }
 
 const getAdminStats = async () => {
-    const totalBookings = await prisma.booking.count()
-    const payments = await prisma.payment.aggregate({
-        where: { status: "PAID" },
-        _sum: { amount: true }
-    })
+    // The four queries are independent, so run them together instead of one round trip each
+    const [totalBookings, payments, statusBreakdown, chartData] = await Promise.all([
+        prisma.booking.count(),
+        prisma.payment.aggregate({
+            where: { status: "PAID" },
+            _sum: { amount: true }
+        }),
+        prisma.booking.groupBy({
+            by: ['status'],
+            _count: { id: true }
+        }),
+        prisma.booking.groupBy({
+            by: ['createdAt'],
+            _count: { id: true },
+            orderBy: { createdAt: 'asc' }
+        }),
+    ])
     const totalAmount = payments._sum.amount || 0
     const averageValue = totalBookings > 0 ? totalAmount / totalBookings : 0
 
-    const statusBreakdown = await prisma.booking.groupBy({
-        by: ['status'],
-        _count: { id: true }
-    })
     const statusCounts = statusBreakdown.reduce((acc: any, item) => {
         acc[item.status] = item._count.id
         return acc
     }, {})
-
-    const chartData = await prisma.booking.groupBy({
-        by: ['createdAt'],
-        _count: { id: true },
-        orderBy: { createdAt: 'asc' }
-    })
 
     const monthlyData = chartData.reduce((acc: any, item) => {
         const month = new Date(item.createdAt).toLocaleString('default', { month: 'short' })
@@ -492,33 +494,34 @@ const getGuideStats = async (user: IUser) => {
     const guide = await prisma.guide.findUnique({ where: { userId: user.userId } })
     if (!guide) throw new ApiError(httpStatus.NOT_FOUND, "Guide not found")
 
-    const totalBookings = await prisma.booking.count({ where: { guideId: guide.id } })
-    const payments = await prisma.payment.aggregate({
-        where: {
-            booking: { guideId: guide.id },
-            status: "PAID"
-        },
-        _sum: { amount: true }
-    })
+    const [totalBookings, payments, statusBreakdown, chartData] = await Promise.all([
+        prisma.booking.count({ where: { guideId: guide.id } }),
+        prisma.payment.aggregate({
+            where: {
+                booking: { guideId: guide.id },
+                status: "PAID"
+            },
+            _sum: { amount: true }
+        }),
+        prisma.booking.groupBy({
+            by: ['status'],
+            where: { guideId: guide.id },
+            _count: { id: true }
+        }),
+        prisma.booking.groupBy({
+            by: ['createdAt'],
+            where: { guideId: guide.id },
+            _count: { id: true },
+            orderBy: { createdAt: 'asc' }
+        }),
+    ])
     const totalAmount = payments._sum.amount || 0
     const averageValue = totalBookings > 0 ? totalAmount / totalBookings : 0
 
-    const statusBreakdown = await prisma.booking.groupBy({
-        by: ['status'],
-        where: { guideId: guide.id },
-        _count: { id: true }
-    })
     const statusCounts = statusBreakdown.reduce((acc: any, item) => {
         acc[item.status] = item._count.id
         return acc
     }, {})
-
-    const chartData = await prisma.booking.groupBy({
-        by: ['createdAt'],
-        where: { guideId: guide.id },
-        _count: { id: true },
-        orderBy: { createdAt: 'asc' }
-    })
 
     const monthlyData = chartData.reduce((acc: any, item) => {
         const month = new Date(item.createdAt).toLocaleString('default', { month: 'short' })
@@ -534,33 +537,34 @@ const getTouristStats = async (user: IUser) => {
     const tourist = await prisma.tourist.findUnique({ where: { userId: user.userId } })
     if (!tourist) throw new ApiError(httpStatus.NOT_FOUND, "Tourist not found")
 
-    const totalBookings = await prisma.booking.count({ where: { touristId: tourist.id } })
-    const payments = await prisma.payment.aggregate({
-        where: {
-            booking: { touristId: tourist.id },
-            status: "PAID"
-        },
-        _sum: { amount: true }
-    })
+    const [totalBookings, payments, statusBreakdown, chartData] = await Promise.all([
+        prisma.booking.count({ where: { touristId: tourist.id } }),
+        prisma.payment.aggregate({
+            where: {
+                booking: { touristId: tourist.id },
+                status: "PAID"
+            },
+            _sum: { amount: true }
+        }),
+        prisma.booking.groupBy({
+            by: ['status'],
+            where: { touristId: tourist.id },
+            _count: { id: true }
+        }),
+        prisma.booking.groupBy({
+            by: ['createdAt'],
+            where: { touristId: tourist.id },
+            _count: { id: true },
+            orderBy: { createdAt: 'asc' }
+        }),
+    ])
     const totalAmount = payments._sum.amount || 0
     const averageValue = totalBookings > 0 ? totalAmount / totalBookings : 0
 
-    const statusBreakdown = await prisma.booking.groupBy({
-        by: ['status'],
-        where: { touristId: tourist.id },
-        _count: { id: true }
-    })
     const statusCounts = statusBreakdown.reduce((acc: any, item) => {
         acc[item.status] = item._count.id
         return acc
     }, {})
-
-    const chartData = await prisma.booking.groupBy({
-        by: ['createdAt'],
-        where: { touristId: tourist.id },
-        _count: { id: true },
-        orderBy: { createdAt: 'asc' }
-    })
 
     const monthlyData = chartData.reduce((acc: any, item) => {
         const month = new Date(item.createdAt).toLocaleString('default', { month: 'short' })

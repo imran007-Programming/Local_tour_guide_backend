@@ -132,40 +132,45 @@ const getAllTour = async (options: any, filters: any) => {
 
     const whereConditions: Prisma.TourWhereInput = andConditions?.length > 0 ? { AND: andConditions } : {}
 
-    const result = await prisma.tour.findMany({
-        where: {
-            AND: whereConditions,
-            isActive: true
-        },
-        skip,
-        take: limit,
-        orderBy: {
-            [sortBy]: sortOrder
-        },
+    const [result, total] = await Promise.all([
+        prisma.tour.findMany({
+            where: {
+                AND: whereConditions,
+                isActive: true
+            },
+            skip,
+            take: limit,
+            orderBy: {
+                [sortBy]: sortOrder
+            },
+        }),
+        prisma.tour.count({
+            where: whereConditions
+        }),
+    ])
+
+    // One query for every tour's reviews (instead of one query per tour)
+    const reviews = await prisma.review.findMany({
+        where: { booking: { tourId: { in: result.map((t) => t.id) } } },
+        select: { rating: true, booking: { select: { tourId: true } } }
     })
+    const ratingsByTour = new Map<string, number[]>()
+    for (const r of reviews) {
+        const list = ratingsByTour.get(r.booking.tourId) ?? []
+        list.push(r.rating)
+        ratingsByTour.set(r.booking.tourId, list)
+    }
 
-    // Get average ratings for each tour
-    const toursWithRatings = await Promise.all(
-        result.map(async (tour) => {
-            const reviews = await prisma.review.findMany({
-                where: { booking: { tourId: tour.id } },
-                select: { rating: true }
-            });
-            
-            const averageRating = reviews.length > 0
-                ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
-                : 0;
-            
-            return {
-                ...tour,
-                averageRating: Math.round(averageRating * 10) / 10,
-                reviewCount: reviews.length
-            };
-        })
-    );
-
-    const total = await prisma.tour.count({
-        where: whereConditions
+    const toursWithRatings = result.map((tour) => {
+        const ratings = ratingsByTour.get(tour.id) ?? []
+        const averageRating = ratings.length > 0
+            ? ratings.reduce((sum, r) => sum + r, 0) / ratings.length
+            : 0
+        return {
+            ...tour,
+            averageRating: Math.round(averageRating * 10) / 10,
+            reviewCount: ratings.length
+        }
     })
     return {
         meta: {
