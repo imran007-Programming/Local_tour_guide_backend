@@ -78,7 +78,7 @@ const createTour = async (req: Request & { user?: any }) => {
 }
 const getAllTour = async (options: any, filters: any) => {
     const { page, limit, skip, sortBy, sortOrder } = paginationHelper.calculatePagination(options)
-    const { searchTerm, maxPrice, minPrice, guest, duration, ...filterData } = filters;
+    const { searchTerm, maxPrice, minPrice, guest, duration, category, ...filterData } = filters;
 
     const andConditions: Prisma.TourWhereInput[] = [];
     if (searchTerm) {
@@ -102,6 +102,15 @@ const getAllTour = async (options: any, filters: any) => {
         andConditions.push({
             duration: {
                 gte: Number(duration)
+            }
+        })
+    }
+    // Category is free text, so match it ignoring case and stray spaces
+    if (category) {
+        andConditions.push({
+            category: {
+                equals: String(category).trim(),
+                mode: "insensitive"
             }
         })
     }
@@ -275,7 +284,13 @@ const getCategories = async () => {
         select: { category: true },
         distinct: ['category']
     })
-    return categories.map(c => c.category)
+    // "Food", "food" and "FOOD " are the same category: keep one entry per spelling
+    const unique = new Map<string, string>()
+    for (const { category } of categories) {
+        const name = category.trim()
+        if (name && !unique.has(name.toLowerCase())) unique.set(name.toLowerCase(), name)
+    }
+    return [...unique.values()].sort((a, b) => a.localeCompare(b))
 }
 
 export const tourService = {
